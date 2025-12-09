@@ -1,3 +1,4 @@
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -14,28 +15,35 @@ public enum SceneState
     GameClear, // ゲームクリアシーン
 }
 
-public class SceneManagerBase
+public abstract class SceneManagerBase : MonoBehaviour
 {
 
 
     protected InputSystem_Actions actions; // インプットシステムの変数
     protected SceneState state = SceneState.None; // シーン状態のインスタンス 
     string nextSceneName = null; // 次シーンの名前
-    string backSceneName = null; // 戻るシーンの名前
+    string backSceneName = null; // 戻るシーンの名前    
 
-    // コンストラクタ
-    SceneManagerBase()
+    protected virtual void Awake()
     {
         actions = new InputSystem_Actions(); // インプットシステムのインスタンスを作る
+    }
+
+
+    protected virtual void OnEnable()
+    {
         actions.Enable(); // インプットシステムの有効化
     }
-    // デストラクタ
-    ~SceneManagerBase()
+
+    protected virtual void OnDisable()
     {
         actions.Disable(); // インプットシステムの無効化
     }
 
-
+    protected virtual void OnDestory()
+    {
+        actions.Dispose(); // インプットシステムの解放
+    }
 
     // 引数に入れたシーンに飛ぶようにする
     protected virtual void ChangeScene(SceneState next, SceneState back = SceneState.None)
@@ -47,12 +55,14 @@ public class SceneManagerBase
         // 次のシーンのボタンが押されたら次のシーンへ移動
         if (actions.UI.Next.WasPressedThisFrame())
         {
+            Hook(); // フックメソッド
             SceneManager.LoadScene(nextSceneName);
         }
 
         // 戻るシーンのボタンが押されたら戻るシーンへ移動
         if (actions.UI.Next.WasPressedThisFrame())
         {
+            Hook(); // フックメソッド
             SceneManager.LoadScene(backSceneName);
         }
     }
@@ -68,7 +78,9 @@ public class SceneManagerBase
         _ => null, // デフォルトの代わり
     };
 
-
+    
+    // フックメソッド(関数の間に処理を入れたい場合のみこの変数を派生クラスでオーバーライドする)
+    protected virtual void Hook() { }
 
     // ゲームの終了
     protected void EndGame()
