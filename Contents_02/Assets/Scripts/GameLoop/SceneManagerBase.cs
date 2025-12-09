@@ -59,7 +59,7 @@ public abstract class SceneManagerBase : MonoBehaviour
         SceneState.Titel => "TitleScene",
         SceneState.Game => "GameScene",
         SceneState.GameOver => "GameOverScene",
-        SceneState.GameClear => "GameClear",
+        SceneState.GameClear => "GameClearScene",
         _ => null, // デフォルトの代わり
     };
 
