@@ -21,11 +21,11 @@ public abstract class SceneManagerBase : MonoBehaviour
 
     protected InputSystem_Actions actions; // インプットシステムの変数
     protected SceneState state = SceneState.None; // シーン状態のインスタンス 
-    string nextSceneName = null; // 次シーンの名前
-    string backSceneName = null; // 戻るシーンの名前    
+    string nextSceneName = null; // 次シーンの名前  
 
     protected virtual void Awake()
     {
+        Application.targetFrameRate = 60;
         actions = new InputSystem_Actions(); // インプットシステムのインスタンスを作る
     }
 
@@ -46,25 +46,10 @@ public abstract class SceneManagerBase : MonoBehaviour
     }
 
     // 引数に入れたシーンに飛ぶようにする
-    protected virtual void ChangeScene(SceneState next, SceneState back = SceneState.None)
+    protected virtual void ChangeScene(SceneState scene)
     {
-        nextSceneName = ConvertToSceneName(next); // 次のシーンの名前取得
-        backSceneName = ConvertToSceneName(back); // 戻るシーンの名前取得
-
-
-        // 次のシーンのボタンが押されたら次のシーンへ移動
-        if (actions.UI.Next.WasPressedThisFrame())
-        {
-            Hook(); // フックメソッド
-            SceneManager.LoadScene(nextSceneName);
-        }
-
-        // 戻るシーンのボタンが押されたら戻るシーンへ移動
-        if (actions.UI.Next.WasPressedThisFrame())
-        {
-            Hook(); // フックメソッド
-            SceneManager.LoadScene(backSceneName);
-        }
+        nextSceneName = ConvertToSceneName(scene); // 次のシーンの名前取得
+        SceneManager.LoadScene(nextSceneName); // 次のシーンに移動
     }
 
     // 入力されたステートをシーン名に変換する(ラムダ + switch式を使う)
@@ -77,10 +62,6 @@ public abstract class SceneManagerBase : MonoBehaviour
         SceneState.GameClear => "GameClear",
         _ => null, // デフォルトの代わり
     };
-
-    
-    // フックメソッド(関数の間に処理を入れたい場合のみこの変数を派生クラスでオーバーライドする)
-    protected virtual void Hook() { }
 
     // ゲームの終了
     protected void EndGame()

@@ -12,8 +12,7 @@ public class GameSceneManager : MonoBehaviour
 
     void Start()
     {
-        Application.targetFrameRate = 60; // FPSを60に固定
-        action.Enable(); // インプットシステムの有効化
+
     }
 
     void Update()
