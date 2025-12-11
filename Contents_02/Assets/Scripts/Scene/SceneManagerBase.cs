@@ -21,7 +21,9 @@ public abstract class SceneManagerBase : MonoBehaviour
 {
     protected InputSystem_Actions actions; // インプットシステムの変数
     protected SceneState state = SceneState.None; // シーン状態のインスタンス 
-    string nextSceneName = null; // 次シーンの名前 
+    protected float fadeTime = 1.5f; // シーンの切り替え秒数
+    string nextSceneName = null; // 次シーンの名前
+    
 
     protected virtual void Awake()
     {
@@ -101,7 +103,7 @@ public abstract class SceneManagerBase : MonoBehaviour
     protected IEnumerator TransitionSequence(SceneState nextScene)
     {
         actions.Disable();
-        yield return StartCoroutine(Fade(1.0f, false, ChangeMaterialValue));
+        yield return StartCoroutine(Fade(1.5f, false, ChangeMaterialValue));
 
         ChangeScene(nextScene); // 次のシーンへ
     }

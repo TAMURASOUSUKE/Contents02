@@ -14,7 +14,7 @@ public class GameClearSceneManager : SceneManagerBase
     // 最初にフェードアウトさせる
     private void Start()
     {
-        StartCoroutine(Fade(1.0f, true, ChangeMaterialValue));
+        StartCoroutine(Fade(fadeTime, true, ChangeMaterialValue));
     }
     void Update()
     {
