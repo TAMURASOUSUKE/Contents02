@@ -18,4 +18,11 @@ public class TitleSceneManager : SceneManagerBase
             EndGame(); // Escボタンでゲーム終了()今後ボタンにするかも
         }
     }
+
+    protected override void OnDestroy()
+    {
+        Debug.Log("呼ばれたよ");
+        // ベースの破棄用関数を呼ぶ
+        base.OnDestroy();
+    }
 }

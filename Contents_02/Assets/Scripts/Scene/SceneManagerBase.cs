@@ -40,7 +40,7 @@ public abstract class SceneManagerBase : MonoBehaviour
         actions.Disable(); // インプットシステムの無効化
     }
 
-    protected virtual void OnDestory()
+    protected virtual void OnDestroy()
     {
         actions.Dispose(); // インプットシステムの解放
     }

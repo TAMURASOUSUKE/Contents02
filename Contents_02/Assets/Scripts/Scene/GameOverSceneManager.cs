@@ -18,4 +18,10 @@ public class GameOverSceneManager : SceneManagerBase
             EndGame(); // タイトルでEscボタンでゲーム終了()今後ボタンにするかも
         }
     }
+
+    protected override void OnDestroy()
+    {
+        // ベースの破棄用関数を呼ぶ
+        base.OnDestroy();
+    }
 }

@@ -24,4 +24,10 @@ public class GameSceneManager : SceneManagerBase
         */
         
     }
+
+    protected override void OnDestroy()
+    {
+        // ベースの破棄用関数を呼ぶ
+        base.OnDestroy();
+    }
 }
