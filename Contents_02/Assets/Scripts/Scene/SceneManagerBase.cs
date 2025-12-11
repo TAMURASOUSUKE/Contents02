@@ -68,11 +68,12 @@ public abstract class SceneManagerBase : MonoBehaviour
 
     
     // floatの値が欲しいが綺麗なフェードインやアウトを作ろうとするとIEnumeratorを返す必要があるためAction<>(関数ポインタのようなもの)で対応する
-    // フェードイン関数 : 第一引数にフェードが完了するまでの時間を入れる, 第二引数はフェードアウトさせるかどうか(falseならInになります) ,第三引数はフェードさせたい値を操作する関数を入れる(0～1で値を返します)
-    protected IEnumerator Fade(float fadeInTime, bool isOut ,Action<float> fadeValue)
+    // フェードイン関数 : 第一引数にフェードが完了するまでの時間を入れる, 第二引数はフェードアウトさせるかどうか(falseならInになります) ,
+    // 第三引数はフェードさせたい画像を入れる ,第四引数はフェードさせたい値を操作する関数を入れる(0～1で値を返します)
+    protected IEnumerator Fade(float fadeInTime, bool isOut, Image targetImage ,Action<float, Image> fadeValue)
     {
         float elapsedTime = 0.0f; // 経過時間
-        fadeValue(0.0f); // 初期化
+        fadeValue(0.0f, targetImage); // 初期化
 
         // 設定時間を超えるまでループする
         while (elapsedTime < fadeInTime)
@@ -86,11 +87,11 @@ public abstract class SceneManagerBase : MonoBehaviour
             {
                  t = 1.0f - t;
             } 
-            fadeValue(t); // 引数で受け取った関数に結果を渡す
+            fadeValue(t, targetImage); // 引数で受け取った関数に結果を渡す
             yield return null; // 1フレーム待機
         }
 
-        fadeValue(isOut ? 0.0f : 1.0f); // 保険としてループを抜けた後0になるようにする
+        fadeValue(isOut ? 0.0f : 1.0f, targetImage); // 保険としてループを抜けた後0になるようにする
     }
 
     // materialの複製を作る関数第一引数にマテリアルを適用したいコンポーネントの変数
@@ -100,21 +101,35 @@ public abstract class SceneManagerBase : MonoBehaviour
         image.material = mat; // 複製したマテリアルを代入する
     }
 
-    protected IEnumerator TransitionSequence(SceneState nextScene)
+    protected IEnumerator TransitionSequence(SceneState nextScene, Image targetImage)
     {
         actions.Disable();
-        yield return StartCoroutine(Fade(1.5f, false, ChangeMaterialValue));
+        Time.timeScale = 0.0f; // 遷移する前に時間を止める
+        yield return StartCoroutine(Fade(fadeTime, false, targetImage ,ChangeMaterialValue));
 
         ChangeScene(nextScene); // 次のシーンへ
     }
 
+    // シーンを始めるとき専用(時間の切り替えを行う)
+    protected IEnumerator StartSceneFade(float fadeTime, bool isOut, Image targetImage, Action<float, Image> fadeValue)
+    {
+        Time.timeScale = 0.0f;
+        yield return StartCoroutine(Fade(fadeTime, isOut, targetImage, fadeValue));
+        Time.timeScale = 1.0f;
+    }
+    
+
     // materialのプロパティを変更する関数
-    protected abstract void ChangeMaterialValue(float val);
+    protected virtual void ChangeMaterialValue(float val, Image targetImage)
+    {
+        targetImage.material.SetFloat("_Threshold", val);
+    }
 
 
     // ゲームの終了
-    protected void EndGame()
+    public void EndGame()
     {
+        Debug.Log("ゲーム終了したよー");
         Application.Quit(); // ゲームの終了
     }
 }
