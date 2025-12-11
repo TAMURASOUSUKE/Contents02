@@ -5,29 +5,30 @@ public class TestEnemy : EnemyBase
 {
     [SerializeField]
     Transform target;
-    [SerializeField]
-    float slowRadius = 10.0f;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        body = transform.GetComponent<Rigidbody>();
+        bb = new TestEnemyBB(data, GetComponent<Rigidbody>());
     }
 
     // Update is called once per frame
     void FixedUpdate()
     {
-        Vector3 vec =
-        Steering.Arrive(target.position, transform.position, body.linearVelocity, data.maxSpeed, slowRadius);
+        bb.targetPos = target.position;
+        steeringManager.AddSteering(seek);
+        Vector3 vec = steeringManager.SteeringCalc(bb);
+        
 
         //ç≈ëÂë¨ìxÇÊÇËíxÇ¢Ç»ÇÁ
-        if (body.linearVelocity.magnitude < data.maxSpeed)
+        if (bb.vel.magnitude < data.maxSpeed)
         {
             //â¡ë¨ìxí«â¡
-            body.AddForce(vec);
+            bb.rb.AddForce(vec, ForceMode.Acceleration);
             //â¡ë¨ìxÇí«â¡ÇµÇƒí¥Ç¶ÇΩÇÁï‚ê≥
-            if (body.linearVelocity.magnitude > data.maxSpeed)
+            if (bb.vel.magnitude > data.maxSpeed)
             {
-                body.linearVelocity = body.linearVelocity.normalized * data.maxSpeed;
+                bb.rb.linearVelocity = bb.vel.normalized * data.maxSpeed;
             }
         }
     }
