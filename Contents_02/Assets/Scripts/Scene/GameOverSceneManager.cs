@@ -14,17 +14,17 @@ public class GameOverSceneManager : SceneManagerBase
     // 最初にフェードアウトさせる
     private void Start()
     {
-        StartCoroutine(Fade(fadeTime, true, ChangeMaterialValue));
+        StartCoroutine(StartSceneFade(fadeTime, true, image, ChangeMaterialValue));
     }
     void Update()
     {
         if (actions.UI.Next.WasPressedThisFrame())
         {
-            StartCoroutine(TransitionSequence(SceneState.Game));
+            StartCoroutine(TransitionSequence(SceneState.Game, image));
         }
         if (actions.UI.Back.WasPressedThisFrame())
         {
-            StartCoroutine(TransitionSequence(SceneState.Titel));
+            StartCoroutine(TransitionSequence(SceneState.Titel, image));
         }
         else if (actions.UI.Exit.WasPressedThisFrame())
         {
@@ -37,10 +37,4 @@ public class GameOverSceneManager : SceneManagerBase
         // ベースの破棄用関数を呼ぶ
         base.OnDestroy();
     }
-    // materialのプロパティを変更する関数
-    protected override void ChangeMaterialValue(float val)
-    {
-        image.material.SetFloat("_Threshold", val);
-    }
-
 }

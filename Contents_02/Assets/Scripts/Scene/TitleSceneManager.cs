@@ -20,25 +20,19 @@ public class TitleSceneManager : SceneManagerBase
     // 最初にフェードアウトさせる
     private void Start()
     {
-        StartCoroutine(Fade(fadeTime, true, ChangeMaterialValue));
+        StartCoroutine(StartSceneFade(fadeTime, true, imagePlanel ,ChangeMaterialValue));
     }
 
     void Update()
     {
         if (actions.UI.Next.WasPressedThisFrame())
         {
-            StartCoroutine(TransitionSequence(SceneState.Game));
+            StartCoroutine(TransitionSequence(SceneState.Game, imagePlanel));
         }
         else if (actions.UI.Exit.WasPressedThisFrame())
         {
             EndGame(); // Escボタンでゲーム終了()今後ボタンにするかも
         }
-    }
-
-    // materialのプロパティを変更する関数
-    protected override void ChangeMaterialValue(float val)
-    {
-        imagePlanel.material.SetFloat("_Threshold", val);
     }
 
     protected override void OnDestroy()
