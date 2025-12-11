@@ -21,7 +21,6 @@ public class TitleSceneManager : SceneManagerBase
 
     protected override void OnDestroy()
     {
-        Debug.Log("呼ばれたよ");
         // ベースの破棄用関数を呼ぶ
         base.OnDestroy();
     }
