@@ -38,6 +38,8 @@ public class GameSceneManager : SceneManagerBase
 
     }
 
+
+
     // materialのプロパティを変更する関数
     protected override void ChangeMaterialValue(float val)
     {
