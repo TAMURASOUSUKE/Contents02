@@ -77,7 +77,7 @@ public abstract class SceneManagerBase : MonoBehaviour
         // 設定時間を超えるまでループする
         while (elapsedTime < fadeInTime)
         {
-            elapsedTime += Time.deltaTime; // 時間を経過させる
+            elapsedTime += Time.unscaledDeltaTime; // 時間を経過させる(タイムスケールの影響を受けないようにする)
             float t =  Mathf.Clamp01(elapsedTime / fadeInTime);  // 現在の時間 / 設定時間で進行度を計算する
 
             // フラグがtrueならフェードアウトさせる
