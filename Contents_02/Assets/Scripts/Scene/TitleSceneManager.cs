@@ -25,6 +25,8 @@ public class TitleSceneManager : SceneManagerBase
 
     void Update()
     {
+        if (isFading) return; // フェード中は操作を受け付けない
+
         if (actions.UI.Next.WasPressedThisFrame())
         {
             StartCoroutine(TransitionSequence(SceneState.Game, imagePlanel));
