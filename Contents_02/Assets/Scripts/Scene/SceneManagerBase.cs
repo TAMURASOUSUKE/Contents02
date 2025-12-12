@@ -22,6 +22,7 @@ public abstract class SceneManagerBase : MonoBehaviour
     protected InputSystem_Actions actions; // インプットシステムの変数
     protected SceneState state = SceneState.None; // シーン状態のインスタンス 
     protected float fadeTime = 1.5f; // シーンの切り替え秒数
+    protected bool isFading = false; // フェード中かどうかのフラグ
     string nextSceneName = null; // 次シーンの名前
     
 
@@ -101,8 +102,10 @@ public abstract class SceneManagerBase : MonoBehaviour
         image.material = mat; // 複製したマテリアルを代入する
     }
 
+    // シーン遷移用の関数
     protected IEnumerator TransitionSequence(SceneState nextScene, Image targetImage)
     {
+        isFading = true; // フェード中フラグを立てる
         actions.Disable();
         Time.timeScale = 0.0f; // 遷移する前に時間を止める
         yield return StartCoroutine(Fade(fadeTime, false, targetImage ,ChangeMaterialValue));
@@ -113,9 +116,11 @@ public abstract class SceneManagerBase : MonoBehaviour
     // シーンを始めるとき専用(時間の切り替えを行う)
     protected IEnumerator StartSceneFade(float fadeTime, bool isOut, Image targetImage, Action<float, Image> fadeValue)
     {
+        isFading = true; // フェード中フラグを立てる
         Time.timeScale = 0.0f;
         yield return StartCoroutine(Fade(fadeTime, isOut, targetImage, fadeValue));
         Time.timeScale = 1.0f;
+        isFading = false; // フェード中フラグを下ろす
     }
     
 

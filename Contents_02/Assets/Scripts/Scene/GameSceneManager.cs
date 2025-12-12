@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 
 /*
@@ -13,10 +14,10 @@ public class GameSceneManager : SceneManagerBase
     [Header("シーン遷移")]
     [SerializeField] Image image;
     [Header("ポーズ画面")]
-    [SerializeField] GameObject quitButton; // ゲームを終了する際のボタン
+    [SerializeField] Image[] quitButtonImage; // ゲームを終了するボタンの画像
     [SerializeField] Volume volume; // ポーズ時のポストプロセス用
-    [SerializeField] Image quitButtonImage; // ゲームを終了するボタンの画像
     [SerializeField] int rePauseTime = 0; // ポーズ連打を防ぐための時間(ここに設定した値が次にポーズを開けるまでの時間になります)
+    [SerializeField] float pauseFadeTime = 0.2f; // ポーズの際のフェードにかける時間(秒)
 
     int currentRePauseTime = 0; // 実際に減らしていく時間
     bool isPause = false; // ポーズ画面かどうかを判断するフラグ
@@ -29,7 +30,12 @@ public class GameSceneManager : SceneManagerBase
     {
         base.Awake();
         CreateCloneMaterial(image);
-        CreateCloneMaterial(quitButtonImage);
+
+        // ポーズ画面用のマテリアル複製を作成する
+        for (int i = 0; i < quitButtonImage.Length; i++)
+        {
+            CreateCloneMaterial(quitButtonImage[i]);
+        }
     }
 
     // 最初にフェードアウトさせる
@@ -40,6 +46,8 @@ public class GameSceneManager : SceneManagerBase
 
     void Update()
     {
+        if (isFading) return; // フェード中は操作を受け付けない
+
         // 条件が作れるまでボタンでクリアシーンに飛ぶようにしておく
         if (actions.UI.Next.WasPressedThisFrame())
         {
@@ -87,24 +95,45 @@ public class GameSceneManager : SceneManagerBase
     {
         isProcessing = true; // フェードが始まったらtrue
 
-        if(!isOut) quitButton.SetActive(true); // ポーズ状態なのでボタン表示
+        if (!isOut)
+        {
+            // すべてのボタンを表示させる
+            for (int i = 0; i < quitButtonImage.Length; i++)
+            {
+                quitButtonImage[i].gameObject.SetActive(true); // ポーズ状態なのでボタン表示
+            }
 
-        yield return StartCoroutine(Fade(0.2f, isOut, quitButtonImage ,ChangeMaterialValue));
+            EventSystem.current.SetSelectedGameObject(null); // 一度選択状態を解除してから
+            EventSystem.current.SetSelectedGameObject(quitButtonImage[0].gameObject); // 最初のボタンを選択状態にする
+        }
 
+        // すべてのボタンのフェードを開始させる
+        for (int i = 0; i < quitButtonImage.Length; i++)
+        {
+            StartCoroutine(Fade(pauseFadeTime, isOut, quitButtonImage[i], ChangeMaterialValue));
+        }
+
+        // ポーズフェード時間待機
+        yield return new WaitForSecondsRealtime(pauseFadeTime);
 
         if (isOut)
         {
             Time.timeScale = 1.0f; // 時間を正常に動かす
             isPause = false; // ポーズ状態を解除する
-            quitButton.SetActive(false); // ポーズ状態の解除なのでボタンも消す
-            currentRePauseTime = rePauseTime;
+
+            for (int i = 0; i < quitButtonImage.Length; i++)
+            {
+                quitButtonImage[i].gameObject.SetActive(false); // ポーズ状態の解除なのでボタンも消す 
+            }
+
+            EventSystem.current.SetSelectedGameObject(null); // 選択状態を解除する
+            currentRePauseTime = rePauseTime; // ポーズ連打防止のための時間をセットする
         }
         else
         {
             Time.timeScale = 0.0f; // 時間を止める
             isPause = true; // ポーズ状態にする
         }
-
 
         isProcessing = false; // フェードが終了したらfalse
     }
