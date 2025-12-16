@@ -1,5 +1,6 @@
-using System;
 using System.Collections.Generic;
+using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class SteeringManager
@@ -12,9 +13,17 @@ public class SteeringManager
         //戻り値を入れる変数
         Vector3 vec = Vector3.zero;
         //計算
-        foreach(var steering in steerings)
+        foreach (var steering in steerings.OrderByDescending(s => s.GetPriority())) 
         {
-            vec += steering.SteeringCalc(_bb, 1.0f);
+            Vector3 v = steering.SteeringCalc(_bb);
+
+            if(steering.GetPriority() == _bb.avoidancePriority && v != Vector3.zero)
+            {
+                vec = v;
+                break;
+            }
+
+            vec += steering.SteeringCalc(_bb);
         }
 
         //steering調整
@@ -27,9 +36,10 @@ public class SteeringManager
     }
 
     //steeringの追加用関数
-    public void AddSteering(SteeringBase steering)
+    public void AddSteering(SteeringBase _steering, float _weight)
     {
-        steerings.Add(steering);
+        _steering.SetWeight(_weight);
+        steerings.Add(_steering);
     }
 
     //ベクトルの補正する

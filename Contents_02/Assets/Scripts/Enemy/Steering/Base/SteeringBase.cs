@@ -2,5 +2,17 @@ using UnityEngine;
 
 public abstract class SteeringBase
 {
-    public abstract Vector3 SteeringCalc(EnemyBlackBoardBase _bb, float weight);
+    protected float weight = 1.0f;
+    protected int priority;
+
+    public void SetWeight(float _weight)
+    {
+        this.weight = _weight;
+    }
+
+    public int GetPriority()
+    {
+        return priority;
+    }
+    public abstract Vector3 SteeringCalc(EnemyBlackBoardBase _bb);
 }

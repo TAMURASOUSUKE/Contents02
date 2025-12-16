@@ -5,7 +5,11 @@ using static UnityEngine.GraphicsBuffer;
 //Seek‚Æ‚Ì•¹—p‚Í–¢‘Î‰
 public class Arrive : SteeringBase
 {
-    public override Vector3 SteeringCalc(EnemyBlackBoardBase _bb, float weight)
+    public Arrive(EnemyBlackBoardBase _bb)
+    {
+        priority = _bb.arrivePriority;
+    }
+    public override Vector3 SteeringCalc(EnemyBlackBoardBase _bb)
     {
         //‹——£
         float dist = (_bb.targetPos - _bb.pos).magnitude;
@@ -30,6 +34,9 @@ public class Arrive : SteeringBase
         Vector3 targetVec = (_bb.targetPos - _bb.pos).normalized * targetSpeed;
         //‰Á‘¬“x
         Vector3 steering = targetVec - _bb.vel;
+
+        //d‚İ”½‰f
+        steering *= weight;
 
         return steering;
     }
