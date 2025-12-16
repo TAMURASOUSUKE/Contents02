@@ -39,6 +39,9 @@ TagManager:
   - 
   - 
   m_SortingLayers:
+  - name: FadeLayer
+    uniqueID: 2023094593
+    locked: 0
   - name: Default
     uniqueID: 0
     locked: 0
