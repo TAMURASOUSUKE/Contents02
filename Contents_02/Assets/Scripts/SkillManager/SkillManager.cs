@@ -1,16 +1,36 @@
 using UnityEngine;
 
+
+
+
 public class SkillManager : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+
+    // スキルのタイプ種別enum
+    public enum SkillType
+    {
+        None, // 基準
+        Buff, // バフ(攻撃力や、足の速度を上げるなど)
+        Flash, // フラッシュ(スタン)
+        Smoke, // (相手の視界を奪う)
+        Bomb, // 爆発
+    }
+
+    SkillContext skillContext;
+
     void Start()
     {
         
     }
 
-    // Update is called once per frame
+   
     void Update()
     {
         
+    }
+
+    void InputSkillContext(SkillContext skillContext_)
+    {
+        skillContext = skillContext_;
     }
 }
