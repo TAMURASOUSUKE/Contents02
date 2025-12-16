@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Scripting.APIUpdating;
 
 
 public class PlayerContoroller : MonoBehaviour
@@ -28,13 +29,15 @@ public class PlayerContoroller : MonoBehaviour
     private Vector3 moveVec = Vector3.zero;
 
     //ダッシュのフラグ
-    private bool isDash;
+    private bool isSprint;
     //しゃがみのフラグ
     private bool isCrouch;
     //ジャンプのフラグ
     private bool isJump;
     //スライディングのフラグ
     private bool isSliding;
+
+    protected InputSystem_Actions moveAcions;
 
     //----------------------------状態------------------------------
 
@@ -48,8 +51,64 @@ public class PlayerContoroller : MonoBehaviour
 
     //--------------------------------------------------------------
 
-    private void Move()
+    protected virtual void Awake()
     {
+        rb = GetComponent<Rigidbody>();
+        moveAcions = new InputSystem_Actions();
+    }
+
+    protected virtual void OnEnable()
+    {
+        moveAcions.Enable(); // インプットシステムの有効化
+    }
+
+    protected virtual void OnDisable()
+    {
+        moveAcions.Disable(); // インプットシステムの無効化
+    }
+
+    protected virtual void OnDestroy()
+    {
+        moveAcions.Dispose(); // インプットシステムの解放
+    }
+
+
+
+    public void Move()
+    {
+        // 入力の受け取り
+        var vec = moveAcions.Player.Move.ReadValue<Vector2>();
+        var spr = moveAcions.Player.Sprint.ReadValue<bool>();
+        var crch = moveAcions.Player.Crouch.ReadValue<bool>();
+        var jmp = moveAcions.Player.Jump.ReadValue<bool>();
+
+        if (spr)
+        {
+            isSprint = !isSprint;
+        }
+        if (crch)
+        {
+            isCrouch = !isCrouch;
+        }
+
+        // ベクトルの生成
+        moveVec = vec;
+
+        // 正規化
+        float length = Mathf.Sqrt((moveVec.x * moveVec.x) + (moveVec.y * moveVec.y));
+        moveVec.x = moveVec.x / length;
+        moveVec.y = moveVec.y / length;
+
+        // 単位ベクトルに速度をかける
+        if (spr)
+        {
+            moveVec = moveVec * DASH_SPEED;
+        }
+        else if (crch)
+        {
+
+        }
+        // 位置に値を追加していく
 
     }
 
