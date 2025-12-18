@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 
@@ -18,18 +17,12 @@ public class SkillManager : MonoBehaviour
         Smoke, // (相手の視界を奪う)
         Bomb, // 爆発
     }
+
+
+
+    int skillCount = Enum.GetValues(typeof(SkillType)).Length - 1; // スキルの種類の数
     static int currentSkillIndex = -1; // 現在の選んでいるスキルは何かを保存する
 
-    void Start()
-    {
-
-    }
-
-
-    void Update()
-    {
-
-    }
 
     // 選択してるスキルを引数に入れた数の方向にずらす(正なら右、負なら左、0なら動かさない)
     public void MoveSelection(int direction)
@@ -45,8 +38,9 @@ public class SkillManager : MonoBehaviour
             case 0:
                 return; // 0の場合は動かさない
         }
-
-        currentSkillIndex = (currentSkillIndex + direction) % Enum.GetValues(typeof(SkillType)).Length; // enumの数をintに変換しています
+        // enumの数をintに変換しています(Noneを外した長さで計算したいので-1)
+        // 降順にも対応できるようにスキルの長さを足す
+        currentSkillIndex = (currentSkillIndex + direction + skillCount) % skillCount;
     }
 
 
@@ -54,6 +48,8 @@ public class SkillManager : MonoBehaviour
     public void ChooseSkill(int index)
     {
         currentSkillIndex = index;
+        if(currentSkillIndex < 0) currentSkillIndex = 0; // 0より下に行かないようにする
+        if(currentSkillIndex > skillCount) currentSkillIndex = (skillCount - 1); // 種類の最後に行く(Noneの影響でスキルの番号がNoneを除いた長さ - 1になっているので計算に含める)
     }
 
     // currentSkillIndexから現在のスキルに変換して返す関数です
