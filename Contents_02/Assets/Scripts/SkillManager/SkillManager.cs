@@ -16,11 +16,12 @@ public class SkillManager : MonoBehaviour
         Flash, // フラッシュ(スタン)
         Smoke, // (相手の視界を奪う)
         Bomb, // 爆発
+        Max, // ここが種類の最後の番号になる
     }
 
 
 
-    int skillCount = Enum.GetValues(typeof(SkillType)).Length - 1; // スキルの種類の数
+    int skillCount = (int)SkillType.Max; // スキルの種類の数
     static int currentSkillIndex = -1; // 現在の選んでいるスキルは何かを保存する
 
 
@@ -38,7 +39,6 @@ public class SkillManager : MonoBehaviour
             case 0:
                 return; // 0の場合は動かさない
         }
-        // enumの数をintに変換しています(Noneを外した長さで計算したいので-1)
         // 降順にも対応できるようにスキルの長さを足す
         currentSkillIndex = (currentSkillIndex + direction + skillCount) % skillCount;
     }
@@ -49,7 +49,7 @@ public class SkillManager : MonoBehaviour
     {
         currentSkillIndex = index;
         if(currentSkillIndex < 0) currentSkillIndex = 0; // 0より下に行かないようにする
-        if(currentSkillIndex > skillCount) currentSkillIndex = (skillCount - 1); // 種類の最後に行く(Noneの影響でスキルの番号がNoneを除いた長さ - 1になっているので計算に含める)
+        if(currentSkillIndex >= skillCount) currentSkillIndex = (skillCount - 1); // 種類の最後に行く(Maxの一つ前が最後のスキルになっているので計算に含める)
     }
 
     // currentSkillIndexから現在のスキルに変換して返す関数です
