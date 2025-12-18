@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: PoisonSwamp
-  m_Shader: {fileID: -6465566751694194690, guid: a581455019e5a334e9c5fe265dcbc8ab, type: 3}
+  m_Shader: {fileID: -6465566751694194690, guid: 112f84017485943439ee7117206582c2, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -45,11 +45,12 @@ Material:
     - _Border: 0.73
     - _QueueControl: 0
     - _QueueOffset: 0
-    - _SwampDepth: 1
+    - _SwampDepth: 0.5
     m_Colors:
     - _BorderColor: {r: 0.3056603, g: 0.3056603, b: 0.3056603, a: 0}
-    - _Color: {r: 1.9043759, g: 0.03952474, b: 1.6407583, a: 0}
-    - _Color_1: {r: 1.0183412, g: 0, b: 1.5924363, a: 0}
+    - _Color: {r: 1.4980391, g: 0.031091345, b: 1.2906697, a: 0}
+    - _ColorDeep: {r: 1.058469, g: 0.03618366, b: 1.743396, a: 0}
+    - _Color_1: {r: 0.9579755, g: 0, b: 1.4980392, a: 0}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
 --- !u!114 &2830010409156241425
