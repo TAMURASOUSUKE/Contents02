@@ -19,6 +19,10 @@ public class ObstacleAvoidance : SteeringBase
 
     public override Vector3 SteeringCalc(EnemyBlackBoardBase _bb)
     {
+        if (_bb.vel == Vector3.zero)
+        {
+            return Vector3.zero;
+        }
         //‰Á‘¬“x
         Vector3 steering = Vector3.zero;
 

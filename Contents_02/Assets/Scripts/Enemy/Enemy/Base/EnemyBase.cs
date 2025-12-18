@@ -5,8 +5,12 @@ public class EnemyBase : MonoBehaviour
     //エネミーの初期値
     [SerializeField]
     protected SO_EnemyData data;
+    [SerializeField]
+    protected EnemySensor sensor;
     //ブラックボード
     protected EnemyBlackBoardBase bb;
+    //ステート
+    protected EnemyStateBase<EnemyBlackBoardBase> state;
     //ステアリングマネージャー
     protected SteeringManager steeringManager = new SteeringManager();
 

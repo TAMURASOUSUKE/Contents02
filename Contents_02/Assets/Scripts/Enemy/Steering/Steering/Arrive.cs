@@ -11,8 +11,14 @@ public class Arrive : SteeringBase
     }
     public override Vector3 SteeringCalc(EnemyBlackBoardBase _bb)
     {
+        //ターゲットが決まってないなら移動しない
+        if (_bb.target == null)
+        {
+            return Vector3.zero;
+        }
+        //ターゲットが決まってないなら移動しない
         //距離
-        float dist = (_bb.targetPos - _bb.pos).magnitude;
+        float dist = (_bb.target.position - _bb.pos).magnitude;
         //目標速度
         float targetSpeed = _bb.maxSpeed;
 
@@ -31,7 +37,7 @@ public class Arrive : SteeringBase
         }
 
         //目標ベクトル
-        Vector3 targetVec = (_bb.targetPos - _bb.pos).normalized * targetSpeed;
+        Vector3 targetVec = (_bb.target.position - _bb.pos).normalized * targetSpeed;
         //加速度
         Vector3 steering = targetVec - _bb.vel;
 

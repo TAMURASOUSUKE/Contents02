@@ -13,7 +13,7 @@ public class EnemyBlackBoardBase
 
     //---------------steeringで使う変数---------------
     //目標地点
-    public Vector3 targetPos;
+    public Transform target = null;
 
     //減速する半径(減速処理の時に使う)
     public float slowRadius = 10.0f;
@@ -32,17 +32,24 @@ public class EnemyBlackBoardBase
     public int arrivePriority;
     public int avoidancePriority;
 
+    //-------------視覚センサーで使うもの----------------
+    //視野角
+    public float fov;
+    //視界距離
+    public float sensorLen;
+
     //コンストラクタ
     public EnemyBlackBoardBase(SO_EnemyData _data,Rigidbody _body, Transform _trans)
     {
         //SOの初期値を代入
         maxSpeed = _data.maxSpeed;
         maxAcc = _data.maxAcc;
-
         dodgeStrength = _data.dodgeStrength;
         seekPriority = _data.seekPriority;
         arrivePriority = _data.arrivePriority;
         avoidancePriority = _data.avoidancePriority;
+        fov = _data.fov;
+        sensorLen = _data.sensorLen;
 
         //RigidBodyを取得
         rb = _body;

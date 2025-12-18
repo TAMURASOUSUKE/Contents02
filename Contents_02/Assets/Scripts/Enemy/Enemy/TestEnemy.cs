@@ -8,11 +8,16 @@ public class TestEnemy : EnemyBase
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        //ブラックボード生成
         bb = new TestEnemyBB(data, GetComponent<Rigidbody>(), transform);
 
+        //ステアリング各種生成
         seek = new Seek(bb);
         arrive = new Arrive(bb);
         obstacleAvoidance = new ObstacleAvoidance(bb);
+
+        //視界セットアップ
+        sensor.SetBB(bb);
     }
 
     private void Update()
@@ -23,7 +28,6 @@ public class TestEnemy : EnemyBase
     // Update is called once per frame
     void FixedUpdate()
     {
-        bb.targetPos = target.position;
         steeringManager.AddSteering(seek,1.0f);
         steeringManager.AddSteering(obstacleAvoidance,1.0f);
         Vector3 vec = steeringManager.SteeringCalc(bb);

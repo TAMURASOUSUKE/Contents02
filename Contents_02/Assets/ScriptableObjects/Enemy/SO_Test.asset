@@ -15,10 +15,10 @@ MonoBehaviour:
   maxSpeed: 50
   maxAcc: 20
   slowRadius: 10
-  frontSphereCastRadius: 3
-  sideRayLen: 3
-  sideRayAngle: 20
+  frontSphereCastRadius: 1
   dodgeStrength: 1
   seekPriority: 1
   arrivePriority: 1
   avoidancePriority: 100
+  fov: 90
+  sensorLen: 25
