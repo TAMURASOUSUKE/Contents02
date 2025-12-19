@@ -514,10 +514,10 @@
         "m_Expanded": true,
         "m_Position": {
             "serializedVersion": "2",
-            "x": -528.8001708984375,
-            "y": -257.6000671386719,
-            "width": 104.800048828125,
-            "height": 33.60008239746094
+            "x": -527.199951171875,
+            "y": -256.0,
+            "width": 104.79995727539063,
+            "height": 33.59999084472656
         }
     },
     "m_Slots": [
@@ -2090,8 +2090,8 @@
     "m_ObjectId": "765a7f2b6bc94d6fa8086e28eaad4a1d",
     "m_Title": "UV",
     "m_Position": {
-        "x": -536.800048828125,
-        "y": 311.20001220703127
+        "x": -536.7999877929688,
+        "y": 311.1999816894531
     }
 }
 
@@ -2933,7 +2933,7 @@
     "m_ShaderOutputName": "Edge1",
     "m_StageCapability": 3,
     "m_Value": {
-        "x": 0.5199999809265137,
+        "x": 0.5099999904632568,
         "y": 0.0,
         "z": 0.0,
         "w": 0.0
@@ -3439,7 +3439,7 @@
     "m_ShaderOutputName": "Edge2",
     "m_StageCapability": 3,
     "m_Value": {
-        "x": 0.0,
+        "x": 0.25999999046325686,
         "y": 1.0,
         "z": 1.0,
         "w": 1.0
@@ -3488,10 +3488,10 @@
         "m_Expanded": true,
         "m_Position": {
             "serializedVersion": "2",
-            "x": -192.8001708984375,
-            "y": 372.0,
-            "width": 151.20018005371095,
-            "height": 141.59991455078126
+            "x": -191.19998168945313,
+            "y": 371.9999694824219,
+            "width": 151.1999969482422,
+            "height": 141.60006713867188
         }
     },
     "m_Slots": [
@@ -3512,7 +3512,7 @@
         "curve"
     ],
     "m_Precision": 0,
-    "m_PreviewExpanded": false,
+    "m_PreviewExpanded": true,
     "m_DismissedVersion": 0,
     "m_PreviewMode": 0,
     "m_CustomColors": {
