@@ -22,7 +22,7 @@ public enum SkillMasks
 public class SkillManager : MonoBehaviour
 {
     SkillMasks[] skillArray; // スキルの種類をまとめる用の配列
-    static int currentSkillIndex = -1; // 現在の選んでいるスキルは何かを保存する
+    int currentSkillIndex = -1; // 現在の選んでいるスキルは何かを保存する
 
     private void Awake()
     {
@@ -57,7 +57,7 @@ public class SkillManager : MonoBehaviour
     {
         if(skillArray == null) return;
         // 選択できる範囲にclampする
-        currentSkillIndex = Mathf.Clamp(index, 0, skillArray.Length);
+        currentSkillIndex = Mathf.Clamp(index, 0, skillArray.Length - 1);
     }
 
 
