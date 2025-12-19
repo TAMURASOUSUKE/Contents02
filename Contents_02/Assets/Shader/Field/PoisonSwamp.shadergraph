@@ -630,7 +630,7 @@
     ],
     "synonyms": [],
     "m_Precision": 0,
-    "m_PreviewExpanded": true,
+    "m_PreviewExpanded": false,
     "m_DismissedVersion": 0,
     "m_PreviewMode": 0,
     "m_CustomColors": {
@@ -1202,8 +1202,8 @@
     "m_ObjectId": "596b35d0d9da4ecb97f565c52780bf99",
     "m_Title": "Texture",
     "m_Position": {
-        "x": -949.60009765625,
-        "y": -127.19999694824219
+        "x": -949.599853515625,
+        "y": -127.20001220703125
     }
 }
 
@@ -1213,8 +1213,8 @@
     "m_ObjectId": "5ab68bd5300e4324825960e9f814cf99",
     "m_Title": "Border",
     "m_Position": {
-        "x": -654.400146484375,
-        "y": 741.5999145507813
+        "x": -654.3997802734375,
+        "y": 741.6000366210938
     }
 }
 
@@ -2047,8 +2047,8 @@
     "m_ObjectId": "d00e4170e89d4d9dab44c2f9238ab3c7",
     "m_Title": "Deep",
     "m_Position": {
-        "x": -913.60009765625,
-        "y": 255.99998474121095
+        "x": -913.5999145507813,
+        "y": 256.0000305175781
     }
 }
 
@@ -2378,7 +2378,7 @@
     ],
     "synonyms": [],
     "m_Precision": 0,
-    "m_PreviewExpanded": true,
+    "m_PreviewExpanded": false,
     "m_DismissedVersion": 0,
     "m_PreviewMode": 0,
     "m_CustomColors": {
