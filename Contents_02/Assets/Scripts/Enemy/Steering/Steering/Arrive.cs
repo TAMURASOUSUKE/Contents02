@@ -1,5 +1,4 @@
 using UnityEngine;
-using static UnityEngine.GraphicsBuffer;
 
 //目的地からの距離に応じて減速させる加速度を作る
 //Seekとの併用は未対応

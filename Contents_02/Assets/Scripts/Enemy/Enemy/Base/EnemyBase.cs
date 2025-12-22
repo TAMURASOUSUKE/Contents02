@@ -1,6 +1,7 @@
 using UnityEngine;
 
-public class EnemyBase : MonoBehaviour
+public class EnemyBase<T> : MonoBehaviour
+    where T : EnemyBlackBoardBase
 {
     //エネミーの初期値
     [SerializeField]
@@ -8,16 +9,9 @@ public class EnemyBase : MonoBehaviour
     [SerializeField]
     protected EnemySensor sensor;
     //ブラックボード
-    protected EnemyBlackBoardBase bb;
+    protected T bb;
     //ステート
-    protected EnemyStateBase<EnemyBlackBoardBase> state;
-    //ステアリングマネージャー
-    protected SteeringManager steeringManager = new SteeringManager();
-
-    //ステアリング各種
-    protected Seek seek;
-    protected Arrive arrive;
-    protected ObstacleAvoidance obstacleAvoidance;
+    protected EnemyStateBase<T> state;
 
     //移動方向を向かせる関数
     protected void RotateLookFront()

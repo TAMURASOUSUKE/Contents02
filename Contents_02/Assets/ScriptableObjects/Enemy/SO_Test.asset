@@ -14,11 +14,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxSpeed: 50
   maxAcc: 20
-  slowRadius: 10
-  frontSphereCastRadius: 1
+  slowRadius: 3
+  frontSphereCastRadius: 2
   dodgeStrength: 1
+  fallDodgeRayAngle: 15
+  fallDodgeRayLen: 2
+  wanderDistance: 4
+  wanderRadius: 4
+  wanderJitter: 1
   seekPriority: 1
   arrivePriority: 1
+  wanderPriority: 1
   avoidancePriority: 100
+  fallAvoidancePriority: 100
   fov: 90
   sensorLen: 25

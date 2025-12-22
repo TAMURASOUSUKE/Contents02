@@ -1,4 +1,3 @@
-using System.Linq;
 using UnityEngine;
 
 public class ObstacleAvoidance : SteeringBase
@@ -19,6 +18,7 @@ public class ObstacleAvoidance : SteeringBase
 
     public override Vector3 SteeringCalc(EnemyBlackBoardBase _bb)
     {
+        //速度がないならゼロ
         if (_bb.vel == Vector3.zero)
         {
             return Vector3.zero;
@@ -47,7 +47,7 @@ public class ObstacleAvoidance : SteeringBase
             steering = (targetDir * _bb.maxSpeed - _bb.vel);
             //--------------------------------------------------------
 
-            //--------------障害物から離れるベクトルを追加(距離に応じて強くなる)--------------
+            //--------------障害物方向に離れるベクトルベクトルを追加(距離に応じて強くなる)--------------
             float dist = hitInfo.distance;
             //距離が遅くなる距離以下なら
             if (dist <= _bb.slowRadius)
@@ -55,9 +55,6 @@ public class ObstacleAvoidance : SteeringBase
                 //オブジェクトの法線方向に距離に応じて離れるベクトルを作成、追加
                 steering += -(dot * hitInfo.normal) * (_bb.slowRadius / dist);
             }
-
-            Debug.Log(hitInfo.transform.gameObject.name);
-            Debug.Log(targetDir);
 
             avoidVec = steering;
         }
@@ -78,9 +75,8 @@ public class ObstacleAvoidance : SteeringBase
 
         //重み反映
         steering *= weight;
-
-        //if(steering != Vector3.zero)
-        //Debug.Log(steering);
+        //強さ反映
+        steering *= _bb.dodgeStrength;
 
         return steering;
     }
