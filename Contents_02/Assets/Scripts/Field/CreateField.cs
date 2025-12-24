@@ -5,45 +5,258 @@ using UnityEngine.Assertions.Must;
 
 public class CreateField : MonoBehaviour
 {
-    [SerializeField] SO_FieldData fieldData;
+    [SerializeField] SO_FieldData fieldData; // フィールドのデータ
     [SerializeField] Transform playerTransform; // プレイヤーの位置情報を参照する
-    [Header("高解像度用のプレファブを表示する距離です")]
+
+
+    [Header("LOD設定")]
+    [Header("高解像度用のプレファブを表示する距離")]
     [SerializeField] float disp01Distance = 300.0f;
-    [Header("低解像度用のプレファブを表除する距離です")]
+    [Header("低解像度用のプレファブを表除する距離")]
     [SerializeField] float disp02Distance = 4200.0f;
-    [Header("プレイヤーが高い位置に行ったときに周囲がどのくらい見えるようになるかを調整するものです")]
+    [Header("プレイヤーが高い位置に行ったときに周囲がどのくらい見えるようになるかを調整する")]
     [SerializeField, Range(0.1f, 1.0f)] float heightFactorADJ = 0.1f;
-    [Header("指定したフレーム数で全体の状態を更新し描画残しを防ぎます")]
+    [Header("指定したフレーム数で全体の状態を更新し描画残しを防ぐ")]
     [Header("単位 : f(フレーム)")]
     [SerializeField] int refreshFrame = 30;
-    [Header("生成間隔")]
+    [Header("生成間隔(グリッドサイズ)")]
     [SerializeField] int generationInterval = 50;
-    GameObject[,] cell01; // fileDataから取り出したlevel01を格納する変数
-    GameObject[,] cell02; // fileDataから取り出したlevel02を格納する変数
-    Vector3 scaleCash = Vector3.one; // fieldDataから取り出したスケールをキャッシュする
-    int prevCenterX = 0; // 前フレームの中心X
-    int prevCenterZ = 0; // 前フレームの中心Z
+
+    // オブジェクト管理配列
+    GameObject[,] cellHigh; // fieldDataから取り出したハイポリを格納する変数
+    GameObject[,] cellLow; // fieldDataから取り出したローポリを格納する変数
+
+    // Transformへのアクセスを減らし高速化をする目的でキャッシュ配列を用意する
+    Vector3[,] positionCache;
+    Vector3 scaleCache = Vector3.one; // fieldDataから取り出したスケールをキャッシュする
+   
+    // 前フレームの計算キャッシュ
+    int prevCenterX = int.MinValue; // 前フレームの中心X
+    int prevCenterZ = int.MinValue; // 前フレームの中心Z
     int prevRadius = 0; // 前フレームの描画半径
+
+
+
+
     void Start()
     {
+        // デバッグ用(毎回同じ配列でデバッグしたいならコメントを外す)
+        // Random.InitState(12345);
+
+
+        if(fieldData == null)
+        {
+            Debug.LogError("FieldDataが設定されていません");
+        }
+
+        scaleCache = fieldData.baseScale;
         SetUp();
-        scaleCash = fieldData.GetScaleLevel01();
     }
 
 
     void Update()
     {
+        if (cellHigh == null) return;
+
         DrawAlgorithm();
 
         // 指定したフレーム間で全体を更新する
         if (Time.frameCount % refreshFrame == 0)
         {
             FullRefresh();
+        }        
+    }
+
+
+    /// <summary>
+    /// // 初期生成フロー(ここでランダム生成を行いフィールドを構築する)
+    /// </summary>
+    void SetUp()
+    {
+        GameObject fieldHighParent = new GameObject("FieldHighParent"); // ハイポリを格納する親
+        GameObject fieldLowParent = new GameObject("FieldLowParent"); // ローポリを格納する親
+        // 各親を生成用オブジェクトの子に設定する
+        fieldHighParent.transform.parent = transform;
+        fieldLowParent.transform.parent = transform;
+
+        // 配列を初期化する
+        cellHigh = new GameObject[fieldData.width, fieldData.depth];
+        cellLow = new GameObject[fieldData.width, fieldData.depth];
+        positionCache = new Vector3[fieldData.width, fieldData.depth]; // Transfromへのアクセスを防ぐ
+        // 埋めつくすときに判定するbool型のデータをフィールド分用意する
+        bool[,] isOccupied = new bool[fieldData.width, fieldData.depth];
+
+        // 壁の配置
+        for (int z = 0; z < fieldData.depth; z++)
+        {
+            for (int x = 0; x < fieldData.width; x++)
+            {
+                // 四方の辺しか判定しない
+                if (x == 0 || x == fieldData.width -1 || z == 0 || z == fieldData.depth - 1)
+                {
+                    var (pHigh, pLow) = fieldData.GetRandomEdgePrefab(); // 端に来たときにランダムに端のプレファブを取得する
+                    SpawnObject(new Vector2Int(x, z), pHigh, pLow, fieldHighParent.transform, fieldLowParent.transform);
+                    isOccupied[x, z] = true;
+                }
+            }
+        }
+
+        // 地面をランダムに配置していく(重要なものから先にルールを適用していく)
+        if(fieldData.spawnRules != null)
+        {
+            foreach (var rule in fieldData.spawnRules)
+            {
+                // そのルールを取得していく
+                var pattern = fieldData.GetMapPatternByID(rule.patternId);
+                if(pattern == null) continue;
+
+                int size = pattern.size;
+                // 壁の内側を抽選範囲とする
+                // Random.Rangeのmaxは排他のため端 - sizeでちょうど壁の手前になる
+                int minX = 1;
+                int maxX = fieldData.width - size;
+                int minZ = 1;
+                int maxZ = fieldData.depth - size;
+
+                if (minX >= maxX || minZ >= maxZ) continue;
+
+
+                // count分だけ配置を試みる
+                for (int i = 0; i < rule.count; i++)
+                {
+                    // 1つの配置につき最大試行回数分だけ試す
+                    for (int attempt = 0; attempt < rule.maxAttempts; attempt++)
+                    {
+                        int rX = Random.Range(minX, maxX);
+                        int rZ = Random.Range(minZ, maxZ);
+
+
+                        // ランダムに出た値が置けるかどうかをチェックする
+                        if (CanPlace(new Vector2Int(rX, rZ), size, isOccupied))
+                        {
+                            // 置けるならLODに使えるように一つ一つに分解して配置する
+                            PlacePattern(new Vector2Int(rX, rZ), pattern, isOccupied, fieldHighParent.transform, fieldLowParent.transform);
+                            break; // 成功したら次の個体に行く
+                        }
+                    }
+                }
+            }
+        }
+
+        // 隙間を埋める
+        for(int z = 0; z < fieldData.depth; z++)
+        {
+            for (int x = 0; x < fieldData.width; x++)
+            {
+                // 何も置かれていないなら地面を置く
+                if (!isOccupied[x, z])
+                {
+                    var (pHigh, pLow) = fieldData.GetRandomFillerPrafab();
+                    SpawnObject(new Vector2Int(x, z), pHigh, pLow, fieldHighParent.transform, fieldLowParent.transform);
+                }
+            }
         }
     }
 
 
-    // プレイヤーとの距離を参照し描画する範囲を決定する
+ 
+
+
+    //  ================================================ ヘルパー関数 ==============================
+    
+    /// <summary>
+    /// 選択した範囲がすべて空いているかをチェックする
+    /// </summary>
+    /// <param name="start">選択したい範囲の最初の位置座標</param>
+    /// <param name="size">選択したい範囲のサイズ</param>
+    /// <param name="occupiedMap">boolで管理しているマップ</param>
+    /// <returns>すべて空いていたらtrueそうでなければfalse</returns>
+    bool CanPlace(Vector2Int start, int size, bool[,] occupiedMap)
+    {
+        for(int z = 0; z < size; z++)
+        {
+            for (int x = 0; x < size; x++)
+            {
+                // 調べ用としている座標がtrueだったら失敗とみなしfalseを返す
+                if (occupiedMap[start.x + x, start.y + z]) return false;
+            }
+        }
+        return true;
+    }
+
+
+
+    /// <summary>
+    /// SOで作ったパターンを一つ一つに分解して
+    /// </summary>
+    /// <param name="start">設定されたパターンの最初の位置</param>
+    /// <param name="pattern">SOで作ったパターンそのもの</param>
+    /// <param name="occupiedMap">bool型マップ</param>
+    /// <param name="pHigh">ハイモデルの親オブジェクトになるもの</param>
+    /// <param name="pLow">ローモデルの親オブジェクトになるもの</param>
+    void PlacePattern(Vector2Int start, SO_FieldData.MapPattern pattern, bool[,] occupiedMap, Transform pHigh, Transform pLow)
+    {
+        int size  = pattern.size;
+        for (int z = 0; z < size; z++)
+        {
+            for (int x = 0; x < size; x++)
+            {
+                int currentX = start.x + x;
+                int currentZ = start.y + z;
+
+                // 左下から順にインデックスを計算する
+                int pIndex = z * size + x;
+
+                if (pIndex < pattern.partsHigh.Length)
+                {
+                    // 生成を行いつつbool座標の場所をtrueにする
+                    SpawnObject(new Vector2Int(currentX, currentZ), pattern.partsHigh[pIndex], pattern.partsLow[pIndex], pHigh, pLow);
+                    occupiedMap[currentX, currentZ] = true;
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// オブジェクトの生成を行う(キャッシュを使っているので若干高速)
+    /// </summary>
+    /// <param name="generatePos">生成する位置</param>
+    /// <param name="prefabHigh">ハイモデルのプレファブ</param>
+    /// <param name="prefabLow">ローモデルのプレファブ</param>
+    /// <param name="pHigh">ハイモデルを格納する親オブジェクト</param>
+    /// <param name="pLow">ローモデルを格納する親オブジェクト</param>
+    void SpawnObject(Vector2Int generatePos, GameObject prefabHigh, GameObject prefabLow, Transform pHigh, Transform pLow)
+    {
+        // プレファブがない場合は何もしない
+        if (prefabHigh == null || prefabLow == null) return;
+
+        // x-z平面で座標を決める
+        Vector3 pos = new Vector3(generatePos.x * generationInterval, 0.0f, generatePos.y * generationInterval);
+
+        // 負担を減らすためにキャッシュに保存
+        positionCache[generatePos.x, generatePos.y] = pos;
+
+        // Highモデルを生成する
+        cellHigh[generatePos.x, generatePos.y] = Instantiate(prefabHigh, pos, Quaternion.identity, pHigh);
+        cellHigh[generatePos.x, generatePos.y].transform.localScale = scaleCache; // スケールの統一
+        cellHigh[generatePos.x, generatePos.y].SetActive(false); // 最初は映さない
+
+        // Lowモデルを生成する
+        cellLow[generatePos.x, generatePos.y] = Instantiate(prefabLow, pos, Quaternion.identity, pLow);
+        cellLow[generatePos.x, generatePos.y].transform.localScale = scaleCache; // スケールの統一
+        cellLow[generatePos.x, generatePos.y].SetActive(false); // 最初は映さない
+
+        // Low側のあたり判定を無効化
+        var col = cellLow[generatePos.x, generatePos.y].GetComponent<Collider>();
+        col.enabled = false;
+    }
+
+
+
+
+    /// <summary>
+    /// プレイヤーとの距離を参照し描画する範囲を決定する
+    /// </summary>
     void DrawAlgorithm()
     {
         // それぞれの距離を成分ごとに計算
@@ -54,13 +267,13 @@ public class CreateField : MonoBehaviour
         float sqDisp02 = totalDisp02Distance * totalDisp02Distance;
 
         // プレイヤーがいる位置をグリッドに変換(一つ一つのオブジェクトのサイズは同じなので01だけで作る)
-        int centerX = Mathf.RoundToInt(playerTransform.position.x / scaleCash.x);
-        int centerZ = Mathf.RoundToInt(playerTransform.position.z / scaleCash.z);
+        int centerX = Mathf.RoundToInt(playerTransform.position.x / scaleCache.x);
+        int centerZ = Mathf.RoundToInt(playerTransform.position.z / scaleCache.z);
 
         // 最大表示距離をマスに変換
         // 距離が小数点を含んでいた場合に小数点分のマスも見れるように切り上げる
         // xとzが同じ大きさであることが前提
-        int radius = Mathf.CeilToInt(totalDisp02Distance / scaleCash.x);
+        int radius = Mathf.CeilToInt(totalDisp02Distance / scaleCache.x);
 
         int useRadius = Mathf.Max(radius, prevRadius); // 実際に使う半径を判断
 
@@ -76,23 +289,28 @@ public class CreateField : MonoBehaviour
             for (int x = minX; x <= maxX; x++)
             {
 
-                float distance_x = playerTransform.position.x - cell01[x, z].transform.position.x;
-                float distance_y = playerTransform.position.y - cell01[x, z].transform.position.y;
-                float distance_z = playerTransform.position.z - cell01[x, z].transform.position.z;
+                if (cellHigh[x, z] == null) continue; // 生成されていない場所はスキップ
+
+                // Transfromではなくキャッシュ座標を使う
+                Vector3 targetPos = positionCache[x, z];
+
+                float distance_x = playerTransform.position.x - targetPos.x;
+                float distance_y = playerTransform.position.y - targetPos.y;
+                float distance_z = playerTransform.position.z - targetPos.z;
                 float distance = distance_x * distance_x + distance_y * distance_y + distance_z * distance_z; // 距離計算
 
                 // 一定の距離以内にいるならtrue
                 bool should01Active = distance < sqDisp01;
-                if (cell01[x, z].activeSelf != should01Active)
+                if (cellHigh[x, z].activeSelf != should01Active)
                 {
-                    cell01[x, z].SetActive(should01Active);
+                    cellHigh[x, z].SetActive(should01Active);
                 }
 
                 // ハイポリの範囲外かつ低ポリ範囲内ならtrue
                 bool should02Active = distance > sqDisp01 && distance < sqDisp02;
-                if (cell02[x, z].activeSelf != should02Active)
+                if (cellLow[x, z].activeSelf != should02Active)
                 {
-                    cell02[x, z].SetActive(should02Active);
+                    cellLow[x, z].SetActive(should02Active);
                 }
             }
         }
@@ -103,8 +321,9 @@ public class CreateField : MonoBehaviour
         prevRadius = radius;
     }
 
-
-    // 万が一取りこぼしがあった時のために一定時間で全体を検索しオブジェクトの状態を切り替える関数
+    /// <summary>
+    /// 万が一取りこぼしがあった時のために一定時間で全体を検索しオブジェクトの状態を切り替える関数
+    /// </summary>
     void FullRefresh()
     {
         // それぞれの距離を成分ごとに計算
@@ -118,61 +337,31 @@ public class CreateField : MonoBehaviour
         {
             for (int x = 0; x < fieldData.width; x++)
             {
-                float distance_x = playerTransform.position.x - cell01[x, z].transform.position.x;
-                float distance_y = playerTransform.position.y - cell01[x, z].transform.position.y;
-                float distance_z = playerTransform.position.z - cell01[x, z].transform.position.z;
+
+                if (cellHigh[x, z] == null) continue;
+
+                Vector3 targetPos = positionCache[x, z];
+
+                float distance_x = playerTransform.position.x - targetPos.x;
+                float distance_y = playerTransform.position.y - targetPos.y;
+                float distance_z = playerTransform.position.z - targetPos.z;
                 float distance = distance_x * distance_x + distance_y * distance_y + distance_z * distance_z; // 距離計算
 
                 // 一定の距離以内にいるならtrue
                 bool should01Active = distance < sqDisp01;
-                if (cell01[x, z].activeSelf != should01Active)
+                if (cellHigh[x, z].activeSelf != should01Active)
                 {
-                    cell01[x, z].SetActive(should01Active);
+                    cellHigh[x, z].SetActive(should01Active);
                 }
 
                 // ハイポリの範囲外かつ低ポリ範囲内ならtrue
                 bool should02Active = distance > sqDisp01 && distance < sqDisp02;
-                if (cell02[x, z].activeSelf != should02Active)
+                if (cellLow[x, z].activeSelf != should02Active)
                 {
-                    cell02[x, z].SetActive(should02Active);
+                    cellLow[x, z].SetActive(should02Active);
                 }
             }
         }
     }
 
-
-    // 最初に地形生成を行う
-    void SetUp()
-    {
-        GameObject filed01Parent = new GameObject("Field01Parent"); // field01の親となるオブジェクトの生成
-        GameObject filed02Parent = new GameObject("Field02Parent"); // field02の親となるオブジェクトの生成
-        filed01Parent.transform.parent = transform; // Field01の親オブジェクトを自身の子オブジェクトにする
-        filed02Parent.transform.parent = transform; // Field02の親オブジェクトを自身の子オブジェクトにする
-
-        // 配列の長さをDataに合わせる
-        cell01 = new GameObject[fieldData.width, fieldData.depth];
-        cell02 = new GameObject[fieldData.width, fieldData.depth];
-
-        for (int z = 0; z < fieldData.depth; z++)
-        {
-            for (int x = 0; x < fieldData.width; x++)
-            {
-                var cell01Prefab = fieldData.GetLevel01(x, z); // level01の情報を取得
-                var cell02Prefab = fieldData.GetLevel02(x, z); // level02の情報の取得
-
-                if (cell01Prefab == null || cell02Prefab == null)
-                {
-                    Debug.LogWarning($"FieldDataが不足しています。 (x, z) = ({x}, {z})");
-                }
-
-                cell01[x, z] = Instantiate(cell01Prefab, new Vector3(x * generationInterval, 0.0f, z * generationInterval), Quaternion.identity); // level01の生成
-                cell02[x, z] = Instantiate(cell02Prefab, new Vector3(x * generationInterval, 0.0f, z * generationInterval), Quaternion.identity); // level02の生成
-                cell01[x, z].transform.parent = filed01Parent.transform; // 生成されたlevel01を子オブジェクトに
-                cell02[x, z].transform.parent = filed02Parent.transform; // 生成されたlevel02を子オブジェクトに
-                cell01[x, z].SetActive(false); // 最初は見えない状態にする
-                cell02[x, z].SetActive(false); // 最初は見えない状態にする
-                cell02[x, z].GetComponent<Collider>().enabled = false; // 02のところに触れるわけではないのであたり判定は消す
-            }
-        }
-    }
 }
