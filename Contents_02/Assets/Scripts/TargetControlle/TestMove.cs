@@ -5,8 +5,6 @@ using UnityEngine;
 [RequireComponent(typeof(CapsuleCollider))]
 public class TestMove : MonoBehaviour
 {
-    [Header("★ 生成されたクラス名に書き換えてください")]
-    // ↓↓ ここをあなたの生成したクラス名にする (例: PlayerInputActions)
     InputSystem_Actions inputActions;
 
     [Header("移動パラメータ")]
@@ -35,7 +33,6 @@ public class TestMove : MonoBehaviour
         }
 
         // 1. 生成されたInputクラスをインスタンス化
-        // ↓↓ クラス名書き換えポイント
         inputActions = new InputSystem_Actions();
     }
 
@@ -57,7 +54,6 @@ public class TestMove : MonoBehaviour
         CheckGround();
 
         // ジャンプ処理 (Updateで入力を拾う)
-        // ↓↓ Action名 (Player.Jump) が違う場合は修正してください
         if (inputActions.Player.Jump.triggered && isGrounded)
         {
             // Y軸の速度をリセットしてから跳ぶ（挙動安定のため）
@@ -69,7 +65,6 @@ public class TestMove : MonoBehaviour
     void FixedUpdate()
     {
         // 入力値を取得
-        // ↓↓ Action名 (Player.Move) が違う場合は修正してください
         Vector2 input = inputActions.Player.Move.ReadValue<Vector2>();
 
         MoveAndRotate(input);
