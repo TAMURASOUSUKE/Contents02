@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5923032920353516537}
   m_Layer: 0
-  m_Name: TestField
+  m_Name: TestField_1By1_Level02
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -80,6 +80,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: e2e799fbc529c314f9d5ca47ac640fdf, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 8c2a2cc90375fdc4c875eb6b31aa9483, type: 2}
     - target: {fileID: 919132149155446097, guid: e2e799fbc529c314f9d5ca47ac640fdf, type: 3}
       propertyPath: m_Name
       value: _test_O_003_field_01_02
@@ -114,7 +118,7 @@ MeshCollider:
   m_LayerOverridePriority: 0
   m_IsTrigger: 0
   m_ProvidesContacts: 0
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 5
   m_Convex: 0
   m_CookingOptions: 30

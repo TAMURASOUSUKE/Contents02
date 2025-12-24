@@ -238,17 +238,19 @@ public class CreateField : MonoBehaviour
 
         // Highモデルを生成する
         cellHigh[generatePos.x, generatePos.y] = Instantiate(prefabHigh, pos, Quaternion.identity, pHigh);
-        cellHigh[generatePos.x, generatePos.y].transform.localScale = scaleCache; // スケールの統一
+        // cellHigh[generatePos.x, generatePos.y].transform.localScale = scaleCache; // スケールの統一
         cellHigh[generatePos.x, generatePos.y].SetActive(false); // 最初は映さない
 
         // Lowモデルを生成する
         cellLow[generatePos.x, generatePos.y] = Instantiate(prefabLow, pos, Quaternion.identity, pLow);
-        cellLow[generatePos.x, generatePos.y].transform.localScale = scaleCache; // スケールの統一
+        // cellLow[generatePos.x, generatePos.y].transform.localScale = scaleCache; // スケールの統一
         cellLow[generatePos.x, generatePos.y].SetActive(false); // 最初は映さない
 
-        // Low側のあたり判定を無効化
-        var col = cellLow[generatePos.x, generatePos.y].GetComponent<Collider>();
-        col.enabled = false;
+        // Low側があたり判定を持っていれば無効化
+        if (cellLow[generatePos.x, generatePos.y].TryGetComponent(out Collider col))
+        {
+            col.enabled = false;
+        }
     }
 
 
