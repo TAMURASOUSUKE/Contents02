@@ -1,45 +1,72 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using Unity.VisualScripting;
+using UnityEditor.PackageManager;
 using UnityEngine;
 
 public class SteeringManager
 {
-    List<SteeringBase> steerings = new List<SteeringBase>();
+    List<AvoidanceSteering> avoidSteerings = new List<AvoidanceSteering>();
+    List<IntentionSteering> intentSteerings = new List<IntentionSteering>();
 
     //ステアリング計算用関数
     public Vector3 SteeringCalc(EnemyBlackBoardBase _bb)
     {
         //戻り値を入れる変数
         Vector3 vec = Vector3.zero;
-        //計算
-        foreach (var steering in steerings.OrderByDescending(s => s.GetPriority())) 
+        //意思計算
+        foreach (var intent in intentSteerings)
         {
-            Vector3 v = steering.SteeringCalc(_bb);
+            vec += intent.SteeringCalc(_bb);
+        }
 
-            if(steering.GetPriority() == _bb.avoidancePriority && v != Vector3.zero)
+        foreach(var avoid in avoidSteerings)
+        {
+            if(avoid.TryGetAvoidance(_bb, out AvoidInfo info))
             {
-                vec = v;
-                break;
-            }
+                //移動ベクトルと、法線との内積
+                float dot = Vector3.Dot(info.normal, vec);
 
-            vec += steering.SteeringCalc(_bb);
+                //回避方向を計算(移動ベクトルから法線方向成分をのいたベクトルを正規化)
+                Vector3 targetDir = (vec - (dot * info.normal)).normalized;
+
+                //目標ベクトルに必要な加速度を計算
+                vec = (targetDir * _bb.maxSpeed - vec);
+                //--------------------------------------------------------
+
+                vec += -info.normal * info.strength;
+
+                Vector3 tangent = Vector3.Cross(info.normal, Vector3.up).normalized;
+
+                // 横方向が弱すぎたら、強制的に接線を足す(targetDir * _bb.maxSpeed - vec)
+                if (vec.sqrMagnitude < _bb.maxAcc)
+                {
+                    vec += tangent * _bb.maxAcc;
+                }
+            }
         }
 
         //steering調整
         vec = AdjustSteering(_bb, vec);
 
         // steeringsのリセット
-        steerings.Clear();
+        avoidSteerings.Clear();
+        intentSteerings.Clear();
 
         return vec;
     }
 
     //steeringの追加用関数
-    public void AddSteering(SteeringBase _steering, float _weight)
+    public void AddSteering(AvoidanceSteering _steering, float _weight)
     {
         _steering.SetWeight(_weight);
-        steerings.Add(_steering);
+        avoidSteerings.Add(_steering);
+    }
+
+    public void AddSteering(IntentionSteering _steering, float _weight)
+    {
+        _steering.SetWeight(_weight);
+        intentSteerings.Add(_steering);
     }
 
     //ベクトルの補正する

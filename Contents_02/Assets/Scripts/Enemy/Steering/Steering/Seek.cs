@@ -2,7 +2,7 @@ using UnityEngine;
 
 //目的地へ最大速度まで加速する加速度
 //Arriveとの併用は未対応
-public class Seek : SteeringBase
+public class Seek : IntentionSteering
 {
     public Seek(EnemyBlackBoardBase _bb)
     {

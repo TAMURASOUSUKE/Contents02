@@ -1,11 +1,14 @@
+using UnityEditor.Rendering;
 using UnityEngine;
 
-public class ObstacleAvoidance : SteeringBase
+public class ObstacleAvoidance : AvoidanceSteering
 {
     //回避が必要フラグ
     bool isAvoiding = false;
     //回避方向
-    Vector3 avoidVec = Vector3.zero;
+    Vector3 avoidDir = Vector3.zero;
+    //離れるベクトルの強さ
+    float strength;
     //回避を続ける時間の計測用変数
     float avoidTimer = 0.0f;
     //回避を続ける時間
@@ -16,12 +19,13 @@ public class ObstacleAvoidance : SteeringBase
         priority = _bb.avoidancePriority;
     }
 
-    public override Vector3 SteeringCalc(EnemyBlackBoardBase _bb)
+    public override bool TryGetAvoidance(EnemyBlackBoardBase _bb,out AvoidInfo _info)
     {
+        _info = new AvoidInfo();
         //速度がないならゼロ
         if (_bb.vel == Vector3.zero)
         {
-            return Vector3.zero;
+            return false;
         }
         //加速度
         Vector3 steering = Vector3.zero;
@@ -56,12 +60,25 @@ public class ObstacleAvoidance : SteeringBase
                 steering += -(dot * hitInfo.normal) * (_bb.slowRadius / dist);
             }
 
-            avoidVec = steering;
+            avoidDir = steering;
+
+            //法線方向
+            _info.normal = hitInfo.normal;
+            avoidDir = hitInfo.normal;
+            //離れるベクトルの強さ
+            if (dist <= _bb.slowRadius)
+            {
+                strength = _bb.slowRadius / dist;
+            }
+
+            _info.strength = strength;
+
+            return true;
         }
         else if (isAvoiding)
         {
-            //加速度作成
-            steering = avoidVec;
+            _info.normal = avoidDir;
+            _info.strength = strength;
 
             //時間を計測してフラグを下げる
             avoidTimer += Time.fixedDeltaTime;
@@ -78,6 +95,6 @@ public class ObstacleAvoidance : SteeringBase
         //強さ反映
         steering *= _bb.dodgeStrength;
 
-        return steering;
+        return false;
     }
 }

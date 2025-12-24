@@ -32,6 +32,24 @@ public class EnemySensor : MonoBehaviour
                     }
                 }
             }
+            //エネミーならRVOリストに追加。
+            if (other.TryGetComponent<EnemyBase<EnemyBlackBoardBase>>(out var enemy))
+            {
+                //リストにいないなら
+                if (bb.rvoList.Contains(enemy) == false)
+                {
+                    bb.rvoList.Add(enemy);
+                }
+            }
+        }
+        //エネミーが角度外に出たなら、リストから外す
+        else if(other.TryGetComponent<EnemyBase<EnemyBlackBoardBase>>(out var enemy))
+        {
+            //リスト内にあるなら
+            if (bb.rvoList.Contains(enemy))
+            {
+                bb.rvoList.Remove(enemy);
+            }
         }
     }
 
@@ -41,6 +59,15 @@ public class EnemySensor : MonoBehaviour
         if (bb.target == other.transform)
         {
             bb.target = null;
+        }
+        //センサー外にエネミーが出たなら
+        if (other.TryGetComponent<EnemyBase<EnemyBlackBoardBase>>(out var enemy))
+        {
+            //リスト内にあるなら
+            if (bb.rvoList.Contains(enemy))
+            {
+                bb.rvoList.Remove(enemy);
+            }
         }
     }
 

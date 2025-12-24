@@ -25,4 +25,9 @@ public class EnemyBase<T> : MonoBehaviour
             transform.rotation = frontRot;
         }
     }
+
+    public Vector3 GetVel()
+    {
+        return bb.vel;
+    }
 }

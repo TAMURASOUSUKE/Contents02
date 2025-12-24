@@ -7,7 +7,7 @@ public class TestEnemyPatrolState:EnemyStateBase<TestEnemyBB>
     {
         _bb.steeringManager.AddSteering(_bb.obstacleAvoidance, 1.0f);
         _bb.steeringManager.AddSteering(_bb.fallAvoidance, 1.0f);
-        _bb.steeringManager.AddSteering(_bb.wander, 1.0f);
+        _bb.steeringManager.AddSteering(_bb.seek, 1.0f);
         Vector3 vec = _bb.steeringManager.SteeringCalc(_bb);
 
 

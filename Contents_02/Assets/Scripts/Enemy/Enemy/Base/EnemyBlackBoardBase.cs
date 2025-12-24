@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class EnemyBlackBoardBase
@@ -67,6 +69,9 @@ public class EnemyBlackBoardBase
     public float fov;
     //視界距離
     public float sensorLen;
+
+    //RVOリスト
+    public List<EnemyBase<EnemyBlackBoardBase>> rvoList = new List<EnemyBase<EnemyBlackBoardBase>>();
 
     //コンストラクタ
     public EnemyBlackBoardBase(SO_EnemyData _data, Rigidbody _body, Transform _trans)

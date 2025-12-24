@@ -2,7 +2,7 @@ using UnityEngine;
 
 //目的地からの距離に応じて減速させる加速度を作る
 //Seekとの併用は未対応
-public class Arrive : SteeringBase
+public class Arrive : IntentionSteering
 {
     public Arrive(EnemyBlackBoardBase _bb)
     {

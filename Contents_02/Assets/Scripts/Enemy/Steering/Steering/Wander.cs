@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class Wander : SteeringBase
+public class Wander : IntentionSteering
 {
     float wanderAngle;
 

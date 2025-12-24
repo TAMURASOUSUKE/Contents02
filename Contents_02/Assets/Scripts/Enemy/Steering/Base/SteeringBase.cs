@@ -14,5 +14,4 @@ public abstract class SteeringBase
     {
         return priority;
     }
-    public abstract Vector3 SteeringCalc(EnemyBlackBoardBase _bb);
 }

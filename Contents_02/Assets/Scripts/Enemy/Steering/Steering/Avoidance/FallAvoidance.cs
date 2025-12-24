@@ -1,25 +1,18 @@
 using UnityEngine;
 
-public class FallAvoidance : SteeringBase
+public class FallAvoidance : AvoidanceSteering
 {
-    //回避が必要フラグ
-    bool isAvoiding = false;
-    //回避方向
-    Vector3 avoidVec = Vector3.zero;
-    //回避を続ける時間の計測用変数
-    float avoidTimer = 0.0f;
-    //回避を続ける時間
-    const float avoidTime = 0.3f;
     public FallAvoidance(EnemyBlackBoardBase _bb)
     {
         priority = _bb.fallAvoidancePriority;
     }
-    public override Vector3 SteeringCalc(EnemyBlackBoardBase _bb)
+    public override bool TryGetAvoidance(EnemyBlackBoardBase _bb,out AvoidInfo _info)
     {
+        _info = new AvoidInfo();
         //速度がないならゼロ
         if (_bb.vel == Vector3.zero)
         {
-            return Vector3.zero;
+            return false;
         }
         //前方
         Vector3 fwd = _bb.trans.forward;
@@ -45,39 +38,23 @@ public class FallAvoidance : SteeringBase
         //疑似法線ベクトル
         Vector3 normal = Vector3.zero;
 
-        //どれか一つのレイが当たったフラグ
-        bool isHit = false;
-
         foreach(Vector3 offset in offsets)
         {
             if(Physics.Raycast(_bb.pos + offset, Vector3.down, _bb.fallDodgeRayLen) == false)
             {
-                isHit = true;
                 normal += offset;
             }
         }
-        if (!isHit && isAvoiding)
-        {
-            //時間を計測してフラグを下げる
-            avoidTimer += Time.fixedDeltaTime;
-            if (avoidTimer >= avoidTime)
-            {
-                avoidTimer = 0;
-                isAvoiding = false;
-            }
-
-            return avoidVec;
-        }
-
         //疑似法線がないのならゼロを返して終了
         if (normal == Vector3.zero)
         {
-            return Vector3.zero;
+            return false;
         }
 
         //疑似法線を正規化
         normal.Normalize();
-        isAvoiding = true;
+
+        _info.normal = normal;
 
         //--------------回避方向の決定--------------
         //移動ベクトルと、法線との内積
@@ -93,6 +70,8 @@ public class FallAvoidance : SteeringBase
         //--------------------------------------------------------
         //--------------障害物方向に離れるベクトルを追加--------------
         steering += -(dot * normal) * _bb.slowRadius;
+
+        _info.strength = _bb.slowRadius;
 
         Debug.DrawLine(_bb.pos, _bb.pos + fwdRayOffset, Color.yellow);
         Debug.DrawLine(_bb.pos, _bb.pos + rightRayOffset,Color.blue);
@@ -112,8 +91,6 @@ public class FallAvoidance : SteeringBase
         //回避強度反映
         steering *= _bb.dodgeStrength;
 
-        avoidVec = steering;
-
-        return steering;
+        return true;
     }
 }
