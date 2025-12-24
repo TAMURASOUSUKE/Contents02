@@ -54,42 +54,28 @@ public class FallAvoidance : AvoidanceSteering
         //疑似法線を正規化
         normal.Normalize();
 
+        //法線代入
         _info.normal = normal;
-
-        //--------------回避方向の決定--------------
-        //移動ベクトルと、法線との内積
-        float dot = Vector3.Dot(normal, _bb.vel);
-
-        //回避方向を計算(移動ベクトルから法線方向成分をのいたベクトルを正規化)
-        Vector3 targetDir = (_bb.vel - (dot * normal)).normalized;
-        //----------------------------------------------------------
-
-        //--------------回避方向から加速度方向を作る--------------
-        //目標ベクトルに必要な加速度を計算
-        Vector3 steering = (targetDir * _bb.maxSpeed - _bb.vel);
-        //--------------------------------------------------------
-        //--------------障害物方向に離れるベクトルを追加--------------
-        steering += -(dot * normal) * _bb.slowRadius;
-
+        //強さは、減速半径をそのまま
         _info.strength = _bb.slowRadius;
 
-        Debug.DrawLine(_bb.pos, _bb.pos + fwdRayOffset, Color.yellow);
-        Debug.DrawLine(_bb.pos, _bb.pos + rightRayOffset,Color.blue);
-        Debug.DrawLine(_bb.pos, _bb.pos + leftRayOffset, Color.red);
-        Debug.DrawLine(_bb.pos, _bb.pos + rightAngleRayOffset, Color.blue);
-        Debug.DrawLine(_bb.pos, _bb.pos + leftAngleRayOffset, Color.red);
+        //Debug.DrawLine(_bb.pos, _bb.pos + fwdRayOffset, Color.yellow);
+        //Debug.DrawLine(_bb.pos, _bb.pos + rightRayOffset,Color.blue);
+        //Debug.DrawLine(_bb.pos, _bb.pos + leftRayOffset, Color.red);
+        //Debug.DrawLine(_bb.pos, _bb.pos + rightAngleRayOffset, Color.blue);
+        //Debug.DrawLine(_bb.pos, _bb.pos + leftAngleRayOffset, Color.red);
 
-        Debug.DrawRay(_bb.pos + fwdRayOffset, Vector3.down, Color.yellow);
-        Debug.DrawRay(_bb.pos + rightRayOffset, Vector3.down, Color.blue);
-        Debug.DrawRay(_bb.pos + leftRayOffset, Vector3.down, Color.red);
-        Debug.DrawRay(_bb.pos + rightAngleRayOffset, Vector3.down, Color.blue);
-        Debug.DrawRay(_bb.pos + leftAngleRayOffset, Vector3.down, Color.red);
+        //Debug.DrawRay(_bb.pos + fwdRayOffset, Vector3.down, Color.yellow);
+        //Debug.DrawRay(_bb.pos + rightRayOffset, Vector3.down, Color.blue);
+        //Debug.DrawRay(_bb.pos + leftRayOffset, Vector3.down, Color.red);
+        //Debug.DrawRay(_bb.pos + rightAngleRayOffset, Vector3.down, Color.blue);
+        //Debug.DrawRay(_bb.pos + leftAngleRayOffset, Vector3.down, Color.red);
 
 
         //重み反映
-        steering *= weight;
+        _info.strength *= weight;
         //回避強度反映
-        steering *= _bb.dodgeStrength;
+        _info.strength *= _bb.dodgeStrength;
 
         return true;
     }

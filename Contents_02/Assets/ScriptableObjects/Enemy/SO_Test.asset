@@ -29,3 +29,4 @@ MonoBehaviour:
   fallAvoidancePriority: 100
   fov: 90
   sensorLen: 25
+  rvoRadius: 1

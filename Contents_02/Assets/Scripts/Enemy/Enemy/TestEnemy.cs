@@ -1,8 +1,9 @@
-using NUnit.Framework.Constraints;
 using UnityEngine;
 
 public class TestEnemy : EnemyBase<TestEnemyBB>
 {
+    [SerializeField]
+    Transform target;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -19,7 +20,10 @@ public class TestEnemy : EnemyBase<TestEnemyBB>
         bb.fallAvoidance = new FallAvoidance(bb);
 
         //視界セットアップ
+        if(sensor != null)
         sensor.SetBB(bb);
+
+        bb.target = target;
     }
 
     private void Update()

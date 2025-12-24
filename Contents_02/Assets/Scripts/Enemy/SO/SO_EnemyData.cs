@@ -61,4 +61,8 @@ public class SO_EnemyData : ScriptableObject
     //‹ŠE‹——£
     [Header("Œ©‚¦‚é‹——£")]
     public float sensorLen;
+
+    //RVO‚Åg‚¤©g‚Ì‘å‚«‚³
+    [Header("RVO‚Å‚Ì‘å‚«‚³‚È‚Ì‚ÅA“–‚è”»’è‚ğ‚·‚Á‚Û‚è•ï‚Ş‘å‚«‚³‚É‚µ‚Ä‚­‚¾‚³‚¢")]
+    public float rvoRadius;
 }

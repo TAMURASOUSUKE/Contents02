@@ -70,8 +70,12 @@ public class EnemyBlackBoardBase
     //視界距離
     public float sensorLen;
 
+    //-----------RVO-------------
     //RVOリスト
-    public List<EnemyBase<EnemyBlackBoardBase>> rvoList = new List<EnemyBase<EnemyBlackBoardBase>>();
+    public List<IRvoObj> rvoList = new List<IRvoObj>();
+
+    //RVOで使う自身の大きさ
+    public float rvoRadius;
 
     //コンストラクタ
     public EnemyBlackBoardBase(SO_EnemyData _data, Rigidbody _body, Transform _trans)
@@ -102,6 +106,9 @@ public class EnemyBlackBoardBase
         //センサー系
         fov = _data.fov;
         sensorLen = _data.sensorLen;
+
+        //RVO系
+        rvoRadius = _data.rvoRadius;
 
         //RigidBodyを取得
         rb = _body;
