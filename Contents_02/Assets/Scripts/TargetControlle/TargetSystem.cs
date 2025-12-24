@@ -6,12 +6,6 @@ public class TargetSystem : MonoBehaviour
     [Header("Cinemachine設定")]
     [SerializeField] CinemachineCamera lockOnCamera; // ロックオン用のカメラ
     [SerializeField] CinemachineTargetGroup targetGroup; // ターゲットグループ
-    [Header("ターゲットグループ関連です。weightが強いとそのオブジェクトを中心にとらえます")]
-    [Header("Radiusはカメラのズーム距離のようなもので指定した半径を描画内に含めます")]
-    [SerializeField] float targetWeight;
-    [SerializeField] float targetRadius;
-    [SerializeField] float userWeight;
-    [SerializeField] float userRadius;
 
 
     [Header("設定")]
@@ -39,14 +33,15 @@ public class TargetSystem : MonoBehaviour
             lockOnCamera.gameObject.SetActive(false);
         }
 
-        // 最初にターゲットグループにuserを追加しておく
         if (targetGroup != null && userTransform != null)
         {
-            // クリア処理
+            // 一旦リストをクリア
             targetGroup.Targets.Clear();
 
-            // ユーザーの追加
-            targetGroup.AddMember(userTransform, userWeight, userRadius);
+            // プレイヤーを追加
+            // Weight(重み) = 10 : カメラはほぼプレイヤーを中心に捉える（主役）
+            // Radius(半径) = 1  : プレイヤー周りの余白は小さくていい
+            targetGroup.AddMember(userTransform, 10.0f, 4.0f);
         }
     }
 
@@ -88,18 +83,19 @@ public class TargetSystem : MonoBehaviour
             // そうでないなら画面中央に一番近い敵を探す
             CurrentTarget = FindGetNearScreenCenter();
 
-            if (CurrentTarget != null && targetCursor != null)
+            if (CurrentTarget != null)
             {
-                
-                // グループに敵を追加
-                if(targetGroup != null)
+               
+                if (targetGroup != null)
                 {
-                    // 敵をメンバーに追加するweightが大きいほどカメラはその対象を中心にとらえる
-                    targetGroup.AddMember(CurrentTarget.transform, 1.0f, 1.5f);
+                    // 敵を追加
+                    // Weight = 1 : プレイヤー(10)に比べて低いので、カメラの中心はプレイヤー寄りのままになる
+                    // Radius = 3 : 敵の周りには大きめの余白を持たせる（画面端で見切れないように）
+                    targetGroup.AddMember(CurrentTarget.transform, 1.0f, 6.0f);
                 }
 
-                lockOnCamera.gameObject.SetActive(true);
-                targetCursor.gameObject.SetActive(true); // 見えるようにする
+                if (lockOnCamera != null) lockOnCamera.gameObject.SetActive(true);
+                if (targetCursor != null) targetCursor.gameObject.SetActive(true);
             }
         }
     }
@@ -150,14 +146,12 @@ public class TargetSystem : MonoBehaviour
         // 次の敵が見つかったら更新
         if(nextTarget != null)
         {
-            // ターゲットの入れ替えを行う(古い敵を消して新しい敵を入れる)
+            
             if (targetGroup != null)
             {
                 targetGroup.RemoveMember(CurrentTarget.transform); // 古い敵を削除
-                targetGroup.AddMember(nextTarget.transform, 1.0f, 1.5f); // 新しい敵を追加
+                targetGroup.AddMember(nextTarget.transform, 1.0f, 6.0f); // 新しい敵を追加
             }
-
-            CurrentTarget = nextTarget;
         }
     
     }
@@ -193,10 +187,16 @@ public class TargetSystem : MonoBehaviour
     // ターゲットの解除処理
     void ClearTarget()
     {
-        CurrentTarget = null;
-        if(targetCursor != null)
+        
+        if (CurrentTarget != null && targetGroup != null)
         {
-            lockOnCamera.gameObject.SetActive(false);
+            targetGroup.RemoveMember(CurrentTarget.transform);
+        }
+
+        CurrentTarget = null;
+        if (targetCursor != null)
+        {
+            if (lockOnCamera != null) lockOnCamera.gameObject.SetActive(false);
             targetCursor.gameObject.SetActive(false);
         }
     }

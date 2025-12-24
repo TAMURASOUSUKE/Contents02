@@ -1,120 +1,64 @@
 using UnityEngine;
-// using UnityEngine.InputSystem; // ※エラーが出る場合はコメント外してください
 
-[RequireComponent(typeof(Rigidbody))]
-[RequireComponent(typeof(CapsuleCollider))]
+// これをつけると自動でCharacterControllerも追加されます
+[RequireComponent(typeof(CharacterController))]
 public class TestMove : MonoBehaviour
 {
-    InputSystem_Actions inputActions;
+    [Header("移動設定")]
+    [SerializeField] float moveSpeed = 6.0f; // 移動速度
+    [SerializeField] float turnSpeed = 10.0f; // 回転速度
 
-    [Header("移動パラメータ")]
-    [SerializeField] float moveSpeed = 6.0f;
-    [SerializeField] float rotationSpeed = 10.0f;
-    [SerializeField] float jumpForce = 5.0f;
-
-    [Header("接地判定")]
-    [SerializeField] LayerMask groundLayer; // 地面のレイヤーを指定すること！
-    [SerializeField] float groundCheckDistance = 0.1f;
-
-    Rigidbody rb;
-    CapsuleCollider capsuleCollider;
+    CharacterController characterController;
     Transform cameraTransform;
-    bool isGrounded;
 
-    void Awake()
+    void Start()
     {
-        rb = GetComponent<Rigidbody>();
-        capsuleCollider = GetComponent<CapsuleCollider>();
+        characterController = GetComponent<CharacterController>();
 
-        // メインカメラを取得
+        // メインカメラの位置情報を取得
         if (Camera.main != null)
         {
             cameraTransform = Camera.main.transform;
         }
-
-        // 1. 生成されたInputクラスをインスタンス化
-        inputActions = new InputSystem_Actions();
+        else
+        {
+            Debug.LogError("メインカメラが見つかりません！タグがMainCameraになっているか確認してください");
+        }
     }
 
-    // 2. 必ず Enable / Disable を呼ぶのがルール
-    void OnEnable()
-    {
-        inputActions.Enable();
-    }
-
-    void OnDisable()
-    {
-        inputActions.Disable();
-    }
-
-    [System.Obsolete]
     void Update()
     {
-        // 接地チェック
-        CheckGround();
+        // WASD入力 (または矢印キー)
+        float h = Input.GetAxis("Horizontal");
+        float v = Input.GetAxis("Vertical");
 
-        // ジャンプ処理 (Updateで入力を拾う)
-        if (inputActions.Player.Jump.triggered && isGrounded)
+        // 入力がある時だけ処理する
+        if (Mathf.Abs(h) > 0.1f || Mathf.Abs(v) > 0.1f)
         {
-            // Y軸の速度をリセットしてから跳ぶ（挙動安定のため）
-            rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
-            rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
-        }
-    }
+            // 1. カメラの向きを基準にする
+            // カメラの前方ベクトルを取得（Y軸=高さ情報は捨てる）
+            Vector3 camForward = cameraTransform.forward;
+            camForward.y = 0;
+            camForward.Normalize();
 
-    void FixedUpdate()
-    {
-        // 入力値を取得
-        Vector2 input = inputActions.Player.Move.ReadValue<Vector2>();
+            // カメラの右方向ベクトルを取得
+            Vector3 camRight = cameraTransform.right;
+            camRight.y = 0;
+            camRight.Normalize();
 
-        MoveAndRotate(input);
-    }
+            // 2. 進む方向を合成する
+            // (カメラの前 * 縦入力) + (カメラの右 * 横入力)
+            Vector3 moveDirection = (camForward * v + camRight * h).normalized;
 
-    void MoveAndRotate(Vector2 input)
-    {
-        if (cameraTransform == null) return;
+            // 3. キャラクターを移動させる
+            characterController.Move(moveDirection * moveSpeed * Time.deltaTime);
 
-        // 入力がなければ停止（慣性を殺してピタッと止める）
-        if (input.sqrMagnitude < 0.01f)
-        {
-            rb.linearVelocity = new Vector3(0f, rb.linearVelocity.y, 0f);
-            return;
+            // 4. キャラクターの向きを進む方向に向ける
+            Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, turnSpeed * Time.deltaTime);
         }
 
-        // --- カメラ基準のベクトル変換 ---
-        Vector3 camForward = cameraTransform.forward;
-        Vector3 camRight = cameraTransform.right;
-
-        // 水平方向のみにする
-        camForward.y = 0f;
-        camRight.y = 0f;
-        camForward.Normalize();
-        camRight.Normalize();
-
-        // 進行方向の決定
-        Vector3 moveDir = (camForward * input.y + camRight * input.x).normalized;
-
-        // --- 移動 (Velocity書き換え) ---
-        Vector3 targetVelocity = moveDir * moveSpeed;
-        // 重力(Y)は今の値を維持する
-        rb.linearVelocity = new Vector3(targetVelocity.x, rb.linearVelocity.y, targetVelocity.z);
-
-        // --- 回転 ---
-        // 少しでも移動していたら向きを変える
-        if (moveDir.sqrMagnitude > 0.01f)
-        {
-            Quaternion targetRotation = Quaternion.LookRotation(moveDir);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.fixedDeltaTime);
-        }
-    }
-
-    void CheckGround()
-    {
-        // カプセルの底より少し下をチェック
-        float checkDist = (capsuleCollider.height * 0.5f) - capsuleCollider.radius + groundCheckDistance;
-        // ※シンプルなCheckSphere方式
-        isGrounded = Physics.CheckSphere(transform.position + Vector3.up * capsuleCollider.radius,
-                                         capsuleCollider.radius + groundCheckDistance,
-                                         groundLayer);
+        // 簡易的な重力（床から浮かないようにするためだけ）
+        characterController.Move(Physics.gravity * Time.deltaTime);
     }
 }
