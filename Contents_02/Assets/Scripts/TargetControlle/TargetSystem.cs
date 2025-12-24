@@ -1,13 +1,21 @@
 using UnityEngine;
 using Unity.Cinemachine;
-using System.Data.Common; // シネマシーン用
 
 public class TargetSystem : MonoBehaviour
 {
     [Header("Cinemachine設定")]
     [SerializeField] CinemachineCamera lockOnCamera; // ロックオン用のカメラ
+    [SerializeField] CinemachineTargetGroup targetGroup; // ターゲットグループ
+    [Header("ターゲットグループ関連です。weightが強いとそのオブジェクトを中心にとらえます")]
+    [Header("Radiusはカメラのズーム距離のようなもので指定した半径を描画内に含めます")]
+    [SerializeField] float targetWeight;
+    [SerializeField] float targetRadius;
+    [SerializeField] float userWeight;
+    [SerializeField] float userRadius;
+
 
     [Header("設定")]
+    [SerializeField] Transform userTransform; // ターゲット使用者のトランスフォーム
     [SerializeField] float searchRadius = 20.0f; // 索敵範囲
     [SerializeField] LayerMask targetLayer; // 敵レイヤー
     [SerializeField] Transform targetCursor; // ロックオンマーカーのUIを入れる。(頭の上に表示するため)
@@ -29,6 +37,16 @@ public class TargetSystem : MonoBehaviour
         if(lockOnCamera != null)
         {
             lockOnCamera.gameObject.SetActive(false);
+        }
+
+        // 最初にターゲットグループにuserを追加しておく
+        if (targetGroup != null && userTransform != null)
+        {
+            // クリア処理
+            targetGroup.Targets.Clear();
+
+            // ユーザーの追加
+            targetGroup.AddMember(userTransform, userWeight, userRadius);
         }
     }
 
@@ -59,19 +77,27 @@ public class TargetSystem : MonoBehaviour
     // トグル式でロックオンとオフの切り替えを行う
     public void ToggleLockOn()
     {
-        if(CurrentTarget != null)
+
+
+        if (CurrentTarget != null)
         {
             ClearTarget(); // すでにロック中なら解除
         }
         else
         {
-            Debug.Log("通ったよ");
             // そうでないなら画面中央に一番近い敵を探す
             CurrentTarget = FindGetNearScreenCenter();
 
-            if(CurrentTarget != null && targetCursor != null)
+            if (CurrentTarget != null && targetCursor != null)
             {
-                lockOnCamera.LookAt = CurrentTarget.transform;
+                
+                // グループに敵を追加
+                if(targetGroup != null)
+                {
+                    // 敵をメンバーに追加するweightが大きいほどカメラはその対象を中心にとらえる
+                    targetGroup.AddMember(CurrentTarget.transform, 1.0f, 1.5f);
+                }
+
                 lockOnCamera.gameObject.SetActive(true);
                 targetCursor.gameObject.SetActive(true); // 見えるようにする
             }
@@ -84,7 +110,7 @@ public class TargetSystem : MonoBehaviour
     {
         if (CurrentTarget == null) return; // ロックしていない場合は処理しない
 
-        Collider[] enemies = Physics.OverlapSphere(transform.position, searchRadius, targetLayer); // 自身の場所から設定した範囲分だけ、レイヤーを持った敵を取得する
+        Collider[] enemies = Physics.OverlapSphere(userTransform.position, searchRadius, targetLayer); // 自身の場所から設定した範囲分だけ、レイヤーを持った敵を取得する
 
         GameObject nextTarget = null; // 次の敵を定義
         float minScreenDistance = float.MaxValue; // どの敵が一番近いかを探すときの基準
@@ -124,8 +150,14 @@ public class TargetSystem : MonoBehaviour
         // 次の敵が見つかったら更新
         if(nextTarget != null)
         {
+            // ターゲットの入れ替えを行う(古い敵を消して新しい敵を入れる)
+            if (targetGroup != null)
+            {
+                targetGroup.RemoveMember(CurrentTarget.transform); // 古い敵を削除
+                targetGroup.AddMember(nextTarget.transform, 1.0f, 1.5f); // 新しい敵を追加
+            }
+
             CurrentTarget = nextTarget;
-            lockOnCamera.LookAt = CurrentTarget.transform;
         }
     
     }
@@ -134,7 +166,7 @@ public class TargetSystem : MonoBehaviour
     // 画面中央に一番近い敵を探す
     GameObject FindGetNearScreenCenter()
     {
-        Collider[] enemies = Physics.OverlapSphere(transform.position, searchRadius, targetLayer);
+        Collider[] enemies = Physics.OverlapSphere(userTransform.position, searchRadius, targetLayer);  
 
         GameObject bestTarget = null; // 最終結果
         float minDistFromCenter = float.MaxValue; // 中央からの距離
