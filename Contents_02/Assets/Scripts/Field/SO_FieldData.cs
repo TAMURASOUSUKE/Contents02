@@ -34,9 +34,13 @@ public class SO_FieldData : ScriptableObject
     [System.Serializable]
     public class MapPattern
     {
+        [Header("識別用のID")]
         public string id; // それぞれのデータを識別できるようにするID
+        [Header("パターンのサイズ(size×size分作られます)")]
         [Range(1, 10)] public int size; // ここで設定した値の塊を作る(必ずsize * sizeになることに留意)
+        [Header("パターンを構成する各ハイモデル")]
         public GameObject[] partsHigh; // それぞれのハイモデル
+        [Header("パターンを構成する各ローモデル")]
         public GameObject[] partsLow; // それぞれのローモデル
     }
 
@@ -47,9 +51,14 @@ public class SO_FieldData : ScriptableObject
     [System.Serializable]
     public class RandomSpawnRule
     {
+        [Header("識別用のID")]
         public string patternId; // パターンの識別ID
+        [Header("生成個数")]
         public int count; // 何個まで生成するのか
+        [Header("生成を行う際の最大試行回数")]
         public int maxAttempts = 100; // 生成を何回まで試行するのか
+        [Header("このルールで配置されたオブジェクトどうしの最低距離(0なら制限なし)")]
+        public float minDistance = 0.0f; // 生成の際の距離制限
     }
 
     /// <summary>

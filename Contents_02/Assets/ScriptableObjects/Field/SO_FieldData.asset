@@ -62,6 +62,8 @@ MonoBehaviour:
   - patternId: "\u30C6\u30B9\u30C83By3"
     count: 4
     maxAttempts: 100
+    minDistance: 10
   - patternId: "\u907A\u8DE1"
-    count: 5
+    count: 30
     maxAttempts: 100
+    minDistance: 0

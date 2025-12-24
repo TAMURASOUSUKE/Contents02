@@ -1,5 +1,5 @@
+using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Assertions.Must;
 
 
 
@@ -120,6 +120,8 @@ public class CreateField : MonoBehaviour
 
                 if (minX >= maxX || minZ >= maxZ) continue;
 
+                // このルールですでに配置した座標を記録する
+                List<Vector2Int> placedPositions = new List<Vector2Int>();
 
                 // count分だけ配置を試みる
                 for (int i = 0; i < rule.count; i++)
@@ -129,13 +131,23 @@ public class CreateField : MonoBehaviour
                     {
                         int rX = Random.Range(minX, maxX);
                         int rZ = Random.Range(minZ, maxZ);
+                        Vector2Int candidatePos = new Vector2Int(rX, rZ); // 行こうとしている位置
+
+                        // 距離チェックを行う
+                        if(rule.minDistance > 0 && IsTooClose(candidatePos, placedPositions, rule.minDistance))
+                        {
+                            continue; // 近いやつがいるのでやり直し
+                        }
 
 
                         // ランダムに出た値が置けるかどうかをチェックする
-                        if (CanPlace(new Vector2Int(rX, rZ), size, isOccupied))
+                        if (CanPlace(candidatePos, size, isOccupied))
                         {
                             // 置けるならLODに使えるように一つ一つに分解して配置する
                             PlacePattern(new Vector2Int(rX, rZ), pattern, isOccupied, fieldHighParent.transform, fieldLowParent.transform);
+                           
+                            placedPositions.Add(candidatePos); // 配置したらリストにも登録する
+                            
                             break; // 成功したら次の個体に行く
                         }
                     }
@@ -366,4 +378,24 @@ public class CreateField : MonoBehaviour
         }
     }
 
+
+    /// <summary>
+    /// 候補地がすでに置かれたリストのいずれかと近すぎないかチェックする
+    /// </summary>
+    /// <param name="candidate">接地しようとしている位置</param>
+    /// <param name="placedList">すでに置かれた座標が格納されたリスト</param>
+    /// <param name="minDistance">最小距離</param>
+    /// <returns>近いやつがいたらtrue全員と離れているのならfalse</returns>
+    bool IsTooClose(Vector2Int candidate, List<Vector2Int> placedList, float minDistance)
+    {
+        foreach(var pos in placedList)
+        {
+            // Vector2Distanceで距離を測る
+            if(Vector2.Distance(candidate, pos) < minDistance)
+            {
+                return true; // 近いやつがいたのでtrueを返す
+            }
+        }
+        return false; // 全員と離れていたのでfalseを返す
+    }
 }
