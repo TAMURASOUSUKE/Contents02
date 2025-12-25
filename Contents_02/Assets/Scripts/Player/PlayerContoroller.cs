@@ -1,9 +1,6 @@
-using NUnit.Framework.Constraints;
-using System.Threading.Tasks;
+using System.Collections;
 using Unity.Cinemachine;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.Scripting.APIUpdating;
 
 
 
@@ -22,14 +19,12 @@ public class PlayerContoroller : MonoBehaviour
     [SerializeField] private float SLIDING_SPEED = 1.5f;
 
     [Header("プレイヤーに加える力")]
-    //加速度
-    [SerializeField] private const float ACCELERATION = 3.0f;
     //ジャンプ力
     [SerializeField] private float JUMP_FORCE = 20.0f;
 
     [Header("プレイヤーの各姿勢時の高さ")]
     //通常時
-    [SerializeField] private const float NORMAL_HIGHT = 1.8f;
+    [SerializeField] private float NORMAL_HIGHT = 1.8f;
     //しゃがみ時
     [SerializeField] private float CROUCH_HIGHT = 1.2f;
     //スライディング時
@@ -43,7 +38,7 @@ public class PlayerContoroller : MonoBehaviour
     [SerializeField] private float CEARCH_CEILING_REYCAST = 0.2f;
     //立った時に天井にぶつからないかチェックするレイキャストのオフセット
     [SerializeField] private Vector3 CEILING_REYCAST_OFFSET;
-
+    //リジッドボディのインスタンス
     Rigidbody rb;
 
     [SerializeField] private float duration;
@@ -75,13 +70,16 @@ public class PlayerContoroller : MonoBehaviour
     protected InputSystem_Actions moveAcions;
 
     private bool isCrouchAvailable = true;
-    private bool isCrouching = false;
     private Transform cameraRootTransform;
     private float standingCameraHeight;
     private Vector3 standingCenter;
 
     private float crouchingCameraHeight;
     private Vector3 crouchingCenter;
+
+
+    private CapsuleCollider capsuleCollider;
+
 
     //----------------------------状態------------------------------
     public enum moveState {
@@ -151,10 +149,10 @@ public class PlayerContoroller : MonoBehaviour
 
         if (moveAcions.Player.Crouch.triggered)
         {
-            isCrouchAvailable = false;
-
-            isCrouch = !isCrouch;
-            CrouchAction(isCrouch);
+            if(isCrouchAvailable)
+            {
+                isCrouch = !isCrouch;
+            }
         }
 
         if (isSprint && isCrouch)
@@ -171,12 +169,6 @@ public class PlayerContoroller : MonoBehaviour
             mState = moveState.Sprint;
         }
 
-        if(isCrouch)
-        {
-            mState = moveState.Crouch;
-
-        }
-
         if (isSliding)
         {
             mState = moveState.Sliding;
@@ -190,6 +182,11 @@ public class PlayerContoroller : MonoBehaviour
         if (moveVec.sqrMagnitude == 0)
         {
             mState = moveState.None;
+        }
+
+        if(isCrouch)
+        {
+            mState = moveState.Crouch;
         }
 
         Debug.Log(mState);
@@ -213,7 +210,7 @@ public class PlayerContoroller : MonoBehaviour
         }
 
 
-
+        // 状態によってスピードを変更する
         switch (mState)
         {
             case moveState.None:
@@ -231,7 +228,8 @@ public class PlayerContoroller : MonoBehaviour
                 moveVec = moveVec * CROUCH_SPEED;
                 break;
             case moveState.Sliding:
-
+                
+                // スライディングの場合はフラグを立てる
                 isSliding = true;
                 break;
         }
@@ -246,16 +244,17 @@ public class PlayerContoroller : MonoBehaviour
         transform.Translate(moveVec);
 
 
-        //ジャンプ処理
 
         currentPos = transform.position;
 
+
+        // 着地判定
         Ray ray = new Ray(currentPos + GROUND_REYCAST_OFFSET, Vector3.down);
         bool isGround = Physics.Raycast(ray, CEARCH_GROUND_REYCAST);
         Debug.DrawRay(GROUND_REYCAST_OFFSET, Vector3.down * CEARCH_GROUND_REYCAST, Color.red);
 
 
-
+        // ジャンプ処理
         if (isJump)
         {
             if(isGround)
@@ -271,37 +270,61 @@ public class PlayerContoroller : MonoBehaviour
 
 
         transform.Rotate(lookVec);
+
+
+        if (isCrouch && isCrouchAvailable)
+        {
+            CrouchAction(true);
+        }
+        else
+        {
+            CrouchAction(false);
+        }
     }
 
-    private async void CrouchAction(bool isCrouch)
+
+    private void CrouchAction(bool isCrouch)
     {
-        float currentHeight = NORMAL_HIGHT;
+        // 多重呼び出しの防止
+        isCrouchAvailable = false;
+        
+        // 現在の高さの取得と切り替える高さの選択(コライダー)
+        float currentHeight = capsuleCollider.height;
         float targetHeight = isCrouch ? CROUCH_HIGHT : NORMAL_HIGHT;
-        Vector3 currentCenter = currentPos;
-        Vector3 targetCenter = isCrouch ? crouchingCenter : standingCenter;
+
+        // コライダーの中心
+        standingCenter = new Vector3( 0.0f, 0.9f, 0.0f );
+        crouchingCenter = new Vector3( 0.0f, 0.6f, 0.0f );
+
+        // 現在の高さの取得と切り替える高さの選択(カメラ)
         float currentCameraHeight = cameraRootTransform.localPosition.y;
         float targetCameraHeight = isCrouch ? crouchingCameraHeight : standingCameraHeight;
 
-        float time = 0;
-        while (time < duration)
-        {
-            time += Time.deltaTime;
-            await Task.Delay((int)(Time.deltaTime * 1000));
+        // コライダーの中心の切り替え
+        capsuleCollider.center = isCrouch ? crouchingCenter : standingCenter;
 
-            float cameraHeight = Mathf.Lerp(currentCameraHeight, targetCameraHeight, time / duration);
-            cameraRootTransform.localPosition = new Vector3(cameraRootTransform.localPosition.x, cameraHeight, cameraRootTransform.localPosition.z);
+        // コライダーの高さの切り替え
+        capsuleCollider.height = targetHeight;
 
-            state.PositionCorrection.y = Mathf.Lerp(currentHeight, targetHeight, time / duration);
-            state.PositionCorrection = Vector3.Lerp(currentCenter, targetCenter, time / duration);
-        }
-        isCrouchAvailable = true;
+        // カメラ座標の変更
+        cameraRootTransform.localPosition =
+            new Vector3(
+                cameraRootTransform.localPosition.x,
+                targetCameraHeight,
+                cameraRootTransform.localPosition.z
+            );
+
         Debug.Log("実行中");
+
+
+        isCrouchAvailable = true;
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        
+        // GameObjectにアタッチされているCapsuleColliderコンポーネントを取得
+        capsuleCollider = GetComponent<CapsuleCollider>();
     }
 
     // Update is called once per frame
