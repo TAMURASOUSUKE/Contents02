@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class PathFollow
@@ -5,10 +6,11 @@ public class PathFollow
     //ルート
     private SO_Nodes routeSo;
     //ルートのインデックス
-    private int routeIndes = 0;
+    private Node next;
     public PathFollow(SO_Nodes _routeSo)
     {
         routeSo = _routeSo;
+        next = routeSo.nodes[0];
     }
     public void MoveTargetCalc(EnemyBlackBoardBase _bb)
     {
@@ -40,10 +42,13 @@ public class PathFollow
     {
         if(IsCompleteMove(_bb))
         {
+            // 現在のノードからけるノードリスト
+            List<Node> nextNodex = next.nextNodes;
             // 現在の目標ノードから、移動できるノードのインデックスをランダムに選ぶ
-            routeIndes = Random.Range(0, routeSo.nodes[routeIndes].nextNodes.Count);
+            int index = Random.Range(0, nextNodex.Count);
             // 移動目標変更
-            _bb.moveTarget = routeSo.nodes[routeIndes].pos;
+            next = nextNodex[index];
+            _bb.moveTarget = next.pos;
         }
     }
 
@@ -58,8 +63,6 @@ public class PathFollow
         Debug.Log("nullチャッククリア");
         // 移動目標との　距離が、停止距離より、短いならtrueを返す
         float dist = Vector3.Distance(_bb.pos, _bb.moveTarget.Value);
-        Debug.Log(dist);
-        Debug.Log(_bb.stopDistance);
         if (dist <= _bb.stopDistance)
         {
             return true;
