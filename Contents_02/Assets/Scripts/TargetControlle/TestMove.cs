@@ -1,64 +1,95 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
-// これをつけると自動でCharacterControllerも追加されます
 [RequireComponent(typeof(CharacterController))]
-public class TestMove : MonoBehaviour
+public class PlayerMovementTest : MonoBehaviour
 {
-    [Header("移動設定")]
-    [SerializeField] float moveSpeed = 6.0f; // 移動速度
-    [SerializeField] float turnSpeed = 10.0f; // 回転速度
+    // ========================================================================
+    // ★重要★: 生成したInput Systemのクラス名に書き換えてください
+    // 例: private PlayerControls inputActions;
+    private InputSystem_Actions inputActions;
+    // ========================================================================
 
-    CharacterController characterController;
-    Transform cameraTransform;
+    [Header("Settings")]
+    [SerializeField] private float moveSpeed = 5.0f;
+    [SerializeField] private float rotateSpeed = 0.1f; // 回転のスムーズさ（秒）
+    [SerializeField] private float gravity = -9.81f;
 
-    void Start()
+    // 内部変数
+    private CharacterController controller;
+    private Transform cameraTransform;
+    private Vector3 playerVelocity; // 重力落下用
+    private float turnSmoothVelocity; // 回転計算用の一時変数
+    private bool isGrounded;
+
+    private void Awake()
     {
-        characterController = GetComponent<CharacterController>();
+        // インスタンス生成（クラス名を合わせる）
+        inputActions = new InputSystem_Actions();
 
-        // メインカメラの位置情報を取得
-        if (Camera.main != null)
+        controller = GetComponent<CharacterController>();
+        cameraTransform = Camera.main.transform;
+    }
+
+    private void OnEnable()
+    {
+        inputActions.Enable();
+    }
+
+    private void OnDisable()
+    {
+        inputActions.Disable();
+    }
+
+    private void Update()
+    {
+        HandleGravity();
+        HandleMovement();
+    }
+
+    private void HandleMovement()
+    {
+        // Input Systemから入力を取得 (Vector2)
+        // "Player" や "Move" はInput Actionsの設定名に合わせてください
+        Vector2 input = inputActions.Player.Move.ReadValue<Vector2>();
+
+        // 入力がある場合のみ移動処理を行う
+        if (input.sqrMagnitude >= 0.01f)
         {
-            cameraTransform = Camera.main.transform;
-        }
-        else
-        {
-            Debug.LogError("メインカメラが見つかりません！タグがMainCameraになっているか確認してください");
+            // 1. 入力値を3Dベクトルに変換（Yは0）
+            // Normalizeしないと斜め移動が速くなる可能性があるが、InputSystemの設定次第
+            Vector3 direction = new Vector3(input.x, 0f, input.y).normalized;
+
+            // 2. カメラの向きを考慮した進行方向の角度を計算
+            // Atan2(x, z) で入力の角度を求め、カメラのY軸回転を加算する
+            float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cameraTransform.eulerAngles.y;
+
+            // 3. キャラクターの向きをスムーズに回転させる
+            float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, rotateSpeed);
+            transform.rotation = Quaternion.Euler(0f, angle, 0f);
+
+            // 4. 計算した角度の方向に移動ベクトルを作成
+            Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
+
+            // 5. CharacterControllerで移動
+            controller.Move(moveDir.normalized * moveSpeed * Time.deltaTime);
         }
     }
 
-    void Update()
+    private void HandleGravity()
     {
-        // WASD入力 (または矢印キー)
-        float h = Input.GetAxis("Horizontal");
-        float v = Input.GetAxis("Vertical");
+        // 接地判定
+        isGrounded = controller.isGrounded;
 
-        // 入力がある時だけ処理する
-        if (Mathf.Abs(h) > 0.1f || Mathf.Abs(v) > 0.1f)
+        if (isGrounded && playerVelocity.y < 0)
         {
-            // 1. カメラの向きを基準にする
-            // カメラの前方ベクトルを取得（Y軸=高さ情報は捨てる）
-            Vector3 camForward = cameraTransform.forward;
-            camForward.y = 0;
-            camForward.Normalize();
-
-            // カメラの右方向ベクトルを取得
-            Vector3 camRight = cameraTransform.right;
-            camRight.y = 0;
-            camRight.Normalize();
-
-            // 2. 進む方向を合成する
-            // (カメラの前 * 縦入力) + (カメラの右 * 横入力)
-            Vector3 moveDirection = (camForward * v + camRight * h).normalized;
-
-            // 3. キャラクターを移動させる
-            characterController.Move(moveDirection * moveSpeed * Time.deltaTime);
-
-            // 4. キャラクターの向きを進む方向に向ける
-            Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, turnSpeed * Time.deltaTime);
+            playerVelocity.y = -2f; // 接地時は少しだけ下向きの力を残して浮き上がりを防ぐ
         }
 
-        // 簡易的な重力（床から浮かないようにするためだけ）
-        characterController.Move(Physics.gravity * Time.deltaTime);
+        // 重力加算
+        playerVelocity.y += gravity * Time.deltaTime;
+
+        // 落下移動
+        controller.Move(playerVelocity * Time.deltaTime);
     }
 }
