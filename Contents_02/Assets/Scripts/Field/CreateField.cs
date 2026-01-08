@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using Unity.VisualScripting;
+using UnityEditor.Analytics;
 using UnityEngine;
 
 
@@ -29,6 +31,7 @@ public class CreateField : MonoBehaviour
     // Transformへのアクセスを減らし高速化をする目的でキャッシュ配列を用意する
     Vector3[,] positionCache;
     Vector3 scaleCache = Vector3.one; // fieldDataから取り出したスケールをキャッシュする
+    Vector2Int playerStartPosCache = Vector2Int.zero; // プレイヤーのスタート位置のキャッシュ(Vector2Int型に丸める)
    
     // 前フレームの計算キャッシュ
     int prevCenterX = int.MinValue; // 前フレームの中心X
@@ -49,7 +52,15 @@ public class CreateField : MonoBehaviour
             Debug.LogError("FieldDataが設定されていません");
         }
 
+        // キャッシュにためる
         scaleCache = fieldData.baseScale;
+
+        //プレイヤーがいる位置をマスに変換する
+        int playerStartPosIntX = Mathf.RoundToInt(playerTransform.position.x / scaleCache.x);
+        int playerStartPosIntZ = Mathf.RoundToInt(playerTransform.position.z / scaleCache.z);
+        playerStartPosCache = new Vector2Int(playerStartPosIntX, playerStartPosIntZ);
+
+        // 初期化
         SetUp();
     }
 
@@ -85,6 +96,44 @@ public class CreateField : MonoBehaviour
         positionCache = new Vector3[fieldData.width, fieldData.depth]; // Transfromへのアクセスを防ぐ
         // 埋めつくすときに判定するbool型のデータをフィールド分用意する
         bool[,] isOccupied = new bool[fieldData.width, fieldData.depth];
+
+        // 最初に固定配置を置く
+        if(fieldData.fixedRules != null)
+        {
+            foreach (var rule in fieldData.fixedRules)
+            {
+                // IDから必要なパターン情報を引っ張ってくる
+                var pattern = fieldData.GetMapPatternByID(rule.patternID);
+
+                if(pattern == null)
+                {
+                    Debug.LogWarning($"固定配置エラー : ID{rule.patternID}が見つかりません");
+                }
+
+
+                // 範囲外チェックを行う
+                if (rule.position.x < 0 || rule.position.x + pattern.size > fieldData.width ||
+                   rule.position.y < 0 || rule.position.y + pattern.size > fieldData.depth)
+                {
+                    Debug.LogWarning($"固定配置エラー : {rule.patternID}が外側に置こうとしています");
+                }
+
+                // 置こうとしている範囲がすでに置いた場所に重なっていないか若しくは壁に重なっていないかを判定する
+                if(CanPlace(rule.position, pattern.size, isOccupied))
+                {
+                    // 分解して設置する
+                    PlacePattern(rule.position, pattern, isOccupied, fieldHighParent.transform, fieldLowParent.transform); 
+                }
+                else
+                {
+                    // エラーを出してどこでミスったかを明確にする
+                    Debug.LogError($"固定配置エラー : {rule.patternID}がすでに置かれている場所か壁のある場所に置こうとしています。\n" +
+                        $"サイズ : {pattern.size}\n" +
+                        $"場所 : {rule.position}");
+                }
+            }
+        }
+
 
         // 壁の配置
         for (int z = 0; z < fieldData.depth; z++)
@@ -133,12 +182,17 @@ public class CreateField : MonoBehaviour
                         int rZ = Random.Range(minZ, maxZ);
                         Vector2Int candidatePos = new Vector2Int(rX, rZ); // 行こうとしている位置
 
-                        // 距離チェックを行う
-                        if(rule.minDistance > 0 && IsTooClose(candidatePos, placedPositions, rule.minDistance))
+                        // 同じもの同士の距離チェックを行う
+                        if(rule.minGenerateDistance > 0 && IsTooClose(candidatePos, placedPositions, rule.minGenerateDistance))
                         {
                             continue; // 近いやつがいるのでやり直し
                         }
 
+                        // 特定のオブジェクトとの距離チェックを行う
+                        if(rule.minIsolationDistance > 0 && IsTooClose(candidatePos, playerStartPosCache, rule.minIsolationDistance))
+                        {
+                            continue; // オブジェクトと近すぎるのでやり直し
+                        }
 
                         // ランダムに出た値が置けるかどうかをチェックする
                         if (CanPlace(candidatePos, size, isOccupied))
@@ -169,7 +223,6 @@ public class CreateField : MonoBehaviour
             }
         }
     }
-
 
  
 
@@ -228,6 +281,8 @@ public class CreateField : MonoBehaviour
             }
         }
     }
+
+   
 
     /// <summary>
     /// オブジェクトの生成を行う(キャッシュを使っているので若干高速)
@@ -376,6 +431,22 @@ public class CreateField : MonoBehaviour
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// 特定のオブジェクトと一定距離離れているかどうかをチェックする
+    /// </summary>
+    /// <param name="candidate">設置しようとしている位置</param>
+    /// <param name="isolationPos">特定のオブジェクトの位置</param>
+    /// <param name="minDistance">最低でも離したい距離</param>
+    /// <returns></returns>
+    bool IsTooClose(Vector2Int candidate, Vector2 isolationPos, float minDistance)
+    {
+        if(Vector2.Distance(candidate, isolationPos) < minDistance)
+        {
+            return true;
+        }
+        return false;
     }
 
 

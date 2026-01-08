@@ -58,12 +58,39 @@ MonoBehaviour:
     - {fileID: 5176774174892677934, guid: d089ff9c87ae09f468885279dafbb53c, type: 3}
     - {fileID: 5176774174892677934, guid: d089ff9c87ae09f468885279dafbb53c, type: 3}
     - {fileID: 5176774174892677934, guid: d089ff9c87ae09f468885279dafbb53c, type: 3}
+  - id: TestFixed
+    size: 3
+    partsHigh:
+    - {fileID: 8410858848237938347, guid: ec7b4e6156cace646ad2d257203f588e, type: 3}
+    - {fileID: 8410858848237938347, guid: ec7b4e6156cace646ad2d257203f588e, type: 3}
+    - {fileID: 8410858848237938347, guid: ec7b4e6156cace646ad2d257203f588e, type: 3}
+    - {fileID: 8410858848237938347, guid: ec7b4e6156cace646ad2d257203f588e, type: 3}
+    - {fileID: 8410858848237938347, guid: ec7b4e6156cace646ad2d257203f588e, type: 3}
+    - {fileID: 8410858848237938347, guid: ec7b4e6156cace646ad2d257203f588e, type: 3}
+    - {fileID: 8410858848237938347, guid: ec7b4e6156cace646ad2d257203f588e, type: 3}
+    - {fileID: 8410858848237938347, guid: ec7b4e6156cace646ad2d257203f588e, type: 3}
+    - {fileID: 8410858848237938347, guid: ec7b4e6156cace646ad2d257203f588e, type: 3}
+    partsLow:
+    - {fileID: 8410858848237938347, guid: 63aeb339480d8424fa9672cecb69cbed, type: 3}
+    - {fileID: 8410858848237938347, guid: 63aeb339480d8424fa9672cecb69cbed, type: 3}
+    - {fileID: 8410858848237938347, guid: 63aeb339480d8424fa9672cecb69cbed, type: 3}
+    - {fileID: 8410858848237938347, guid: 63aeb339480d8424fa9672cecb69cbed, type: 3}
+    - {fileID: 8410858848237938347, guid: 63aeb339480d8424fa9672cecb69cbed, type: 3}
+    - {fileID: 8410858848237938347, guid: 63aeb339480d8424fa9672cecb69cbed, type: 3}
+    - {fileID: 8410858848237938347, guid: 63aeb339480d8424fa9672cecb69cbed, type: 3}
+    - {fileID: 8410858848237938347, guid: 63aeb339480d8424fa9672cecb69cbed, type: 3}
+    - {fileID: 8410858848237938347, guid: 63aeb339480d8424fa9672cecb69cbed, type: 3}
+  fixedRules:
+  - position: {x: 15, y: 15}
+    patternID: TestFixed
   spawnRules:
   - patternId: "\u30C6\u30B9\u30C83By3"
     count: 4
     maxAttempts: 100
-    minDistance: 10
+    minGenerateDistance: 0
+    minIsolationDistance: 0
   - patternId: "\u907A\u8DE1"
-    count: 30
+    count: 10
     maxAttempts: 100
-    minDistance: 0
+    minGenerateDistance: 3
+    minIsolationDistance: 0
