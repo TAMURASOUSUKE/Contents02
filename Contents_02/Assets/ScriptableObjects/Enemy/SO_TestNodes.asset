@@ -12,4 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: faa52a71b6eb92c49b7d729291d20681, type: 3}
   m_Name: SO_TestNodes
   m_EditorClassIdentifier: 
-  nodes: []
+  nodes:
+  - id: 0
+    pos: {x: 3.103219, y: 1.1593e-16, z: -25.82439}
+    nextNodes: []
+  - id: 1
+    pos: {x: -11.492758, y: -1.8677145e-16, z: -6.115635}
+    nextNodes: []
+  - id: 2
+    pos: {x: 5.74963, y: 2.0934492e-16, z: 6.730011}
+    nextNodes: []
+  - id: 3
+    pos: {x: 45.234974, y: 1.0601155e-15, z: -16.680414}
+    nextNodes: []

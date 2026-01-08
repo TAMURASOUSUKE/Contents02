@@ -5,6 +5,7 @@ public class TestEnemyPatrolState:EnemyStateBase<TestEnemyBB>
 {
     public override void StateUpdate(TestEnemyBB _bb)
     {
+        _bb.pathFollow.PathMoveCalc(_bb);
         _bb.steeringManager.AddSteering(_bb.obstacleAvoidance, 1.0f);
         _bb.steeringManager.AddSteering(_bb.fallAvoidance, 1.0f);
         _bb.steeringManager.AddSteering(_bb.arrive, 1.0f);

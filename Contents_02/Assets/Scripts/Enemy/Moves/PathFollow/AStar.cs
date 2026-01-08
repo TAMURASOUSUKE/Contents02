@@ -4,7 +4,7 @@ using UnityEngine.Rendering;
 
 public class AStar
 {
-    public Node[] Calc(Node _start, Node _goal)
+    static public Node[] Calc(Node _start, Node _goal)
     {
         //Œ‹‰Ê‘ã“ü—p
         List<Node> result = new List<Node>();

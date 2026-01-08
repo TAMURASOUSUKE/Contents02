@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxSpeed: 50
   maxAcc: 20
+  stopDistance: 3
   slowRadius: 3
   frontSphereCastRadius: 2
   dodgeStrength: 1
@@ -22,6 +23,7 @@ MonoBehaviour:
   wanderDistance: 4
   wanderRadius: 4
   wanderJitter: 1
+  route: {fileID: 11400000, guid: 770ed3232d264b54b818622caf5165f1, type: 2}
   seekPriority: 1
   arrivePriority: 1
   wanderPriority: 1

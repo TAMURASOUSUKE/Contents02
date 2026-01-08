@@ -13,6 +13,11 @@ public class NodeSetTool: EditorWindow
     /// 選択されたノード
     /// </summary>
     Node select;
+
+    /// <summary>
+    /// ノードの表示サイズ
+    /// </summary>
+    float nodeSize = 1.0f;
     [MenuItem("Tools/MapNodePlanter")]
     static void Open()
     {
@@ -33,27 +38,31 @@ public class NodeSetTool: EditorWindow
     {
         GUILayout.Label("マップ上にノードを配置するツール");
 
+        // SOの代入用インスペクター
         so = (SO_Nodes)EditorGUILayout.ObjectField("ノードを追加したいSO_Nodes", so, typeof(SO_Nodes), false);
+
+        // ノードサイズの変更用スライダー
+        nodeSize = EditorGUILayout.Slider("ノードサイズ", nodeSize, 0.1f, 10.0f);
     }
     
-    void OnSceneGUI(SceneView sceneView)
+    void OnSceneGUI(SceneView _sceneView)
     {
         Event e = Event.current;
 
         PlantNode(e);
         DeleteNode(e);
 
-        DrawNode(e);
-        DrawConnection(e);
+        DrawNode();
+        DrawConnection();
     }
 
     /// <summary>
     /// ノード設置関数
     /// </summary>
-    /// <param name="e_">
+    /// <param name="_e">
     /// 現在のイベント
     /// </param>
-    void PlantNode(Event e_)
+    void PlantNode(Event _e)
     {
         // nullチェック
         if (so == null)
@@ -62,14 +71,14 @@ public class NodeSetTool: EditorWindow
         }
 
         // マウスからのレイ
-        Ray ray = HandleUtility.GUIPointToWorldRay(e_.mousePosition);
+        Ray ray = HandleUtility.GUIPointToWorldRay(_e.mousePosition);
 
-        if (Physics.Raycast(ray, out RaycastHit hitinfo) == false&& e_.type == EventType.MouseMove)
+        if (Physics.Raycast(ray, out RaycastHit hitinfo) == false&& _e.type == EventType.MouseMove)
         {
             return;
         }
 
-        if (Handles.Button(hitinfo.point, Quaternion.identity, 0.3f, 0.3f, Handles.SphereHandleCap))
+        if (Handles.Button(hitinfo.point, Quaternion.identity, nodeSize, nodeSize, Handles.SphereHandleCap))
         {
             // Undo作成
             Undo.RecordObject(so, "add node");
@@ -85,17 +94,17 @@ public class NodeSetTool: EditorWindow
             EditorUtility.SetDirty(so);
 
             // イベント使用
-            e_.Use();
+            _e.Use();
         }
     }
 
     /// <summary>
     /// ノード削除関数
     /// </summary>
-    /// <param name="e_">
+    /// <param name="_e">
     /// 現在のイベント
     /// </param>
-    void DeleteNode(Event e_)
+    void DeleteNode(Event _e)
     {
         // nullチェック
         if (so == null || select == null)
@@ -104,7 +113,7 @@ public class NodeSetTool: EditorWindow
         }
 
         // deleteボタンが押されたら、削除
-        if(e_.type == EventType.KeyDown && e_.keyCode == KeyCode.Delete)
+        if(_e.type == EventType.KeyDown && _e.keyCode == KeyCode.Delete)
         {
             // Undo作成
             Undo.RecordObject(so, "delete node");
@@ -131,7 +140,7 @@ public class NodeSetTool: EditorWindow
             EditorUtility.SetDirty(so);
 
             // イベント使用
-            e_.Use();
+            _e.Use();
         }
     }
 
@@ -169,10 +178,7 @@ public class NodeSetTool: EditorWindow
     /// <summary>
     /// 現在設置されているノード描画関数
     /// </summary>
-    /// <param name="e_">
-    /// 現在のイベント
-    /// </param>
-    void DrawNode(Event e_)
+    void DrawNode()
     {
         // nullチェック
         if (so == null)
@@ -194,7 +200,7 @@ public class NodeSetTool: EditorWindow
                 }
             }
 
-            if (Handles.Button(node.pos, Quaternion.identity, 0.3f, 0.3f, Handles.SphereHandleCap))
+            if (Handles.Button(node.pos, Quaternion.identity, nodeSize, nodeSize, Handles.SphereHandleCap))
             {
                 // 選択されたノードが埋まってるかどうか
                 if(select == null)
@@ -228,10 +234,7 @@ public class NodeSetTool: EditorWindow
     /// <summary>
     /// ノード間の接続の描画関数
     /// </summary>
-    /// <param name="e_">
-    /// 現在のイベント
-    /// </param>
-    void DrawConnection(Event e_)
+    void DrawConnection()
     {
         // nullチェック
         if(so == null)
