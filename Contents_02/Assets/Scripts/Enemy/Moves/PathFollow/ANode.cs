@@ -1,12 +1,12 @@
 public class ANode
 {
-    public SO_Node node;          //どのノードか
+    public Node node;          //どのノードか
     public float cost;  //移動コスト
     public float dist;  //ゴールとの距離
     public float score; //スコア
     public ANode parent;//計算時親ノード
     //-------------コンストラクタ------------------------
-    public ANode(SO_Node _node, float _cost, float _dist, float _score, ANode _parent)
+    public ANode(Node _node, float _cost, float _dist, float _score, ANode _parent)
     {
         this.node = _node;
         this.cost = _cost;
@@ -14,7 +14,7 @@ public class ANode
         this.score = _score;
         this.parent = _parent;
     }
-    public ANode(SO_Node _node, float _cost, float _dist, float _score)
+    public ANode(Node _node, float _cost, float _dist, float _score)
     {
         this.node = _node;
         this.cost = _cost;
@@ -22,7 +22,7 @@ public class ANode
         this.score = _score;
         this.parent = null;
     }
-    public ANode(SO_Node _node, float _cost, float _dist)
+    public ANode(Node _node, float _cost, float _dist)
     {
         this.node = _node;
         this.cost = _cost;

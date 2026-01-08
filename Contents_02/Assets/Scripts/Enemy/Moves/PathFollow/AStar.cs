@@ -4,10 +4,10 @@ using UnityEngine.Rendering;
 
 public class AStar
 {
-    public SO_Node[] Calc(SO_Node[] _map, SO_Node _start, SO_Node _goal)
+    public Node[] Calc(Node _start, Node _goal)
     {
         //結果代入用
-        List<SO_Node> result = new List<SO_Node>();
+        List<Node> result = new List<Node>();
 
         //スタート位置の評価計算
         ANode currentANode =
@@ -27,7 +27,7 @@ public class AStar
         while(currentANode.node.id != _goal.id)
         {
             //隣接ノードの計算
-            foreach(SO_Node next in currentANode.node.nextNodes)
+            foreach(Node next in currentANode.node.nextNodes)
             {
                 //エラー防止
                 if (next.id == -1)
