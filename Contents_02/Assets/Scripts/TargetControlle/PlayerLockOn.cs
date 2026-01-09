@@ -9,15 +9,16 @@ public class PlayerLockOn : MonoBehaviour
     private InputSystem_Actions inputActions;
 
     [Header("References")]
-    [SerializeField] private PlayerCamera playerCamera; // カメラ制御スクリプト
-    [SerializeField] private Transform origin;          // プレイヤーの中心座標
-    [SerializeField] private GameObject lockOnCursor;   // ロックオンマーカーUI
+    [SerializeField] PlayerCamera playerCamera; // カメラ制御スクリプト
+    [SerializeField] Transform origin;          // プレイヤーの中心座標
+    [SerializeField] GameObject lockOnCursor;   // ロックオンマーカーUI
 
     [Header("Settings")]
-    [SerializeField] private float lockOnRange = 20.0f;     // ロックオン可能距離
-    [SerializeField] private LayerMask lockOnLayers;        // 敵のレイヤー
-    [SerializeField] private LayerMask lockOnObstacleLayers;// 壁などの障害物レイヤー
+    [SerializeField] float lockOnRange = 20.0f;     // ロックオン可能距離
+    [SerializeField] LayerMask lockOnLayers;        // 敵のレイヤー
+    [SerializeField] LayerMask lockOnObstacleLayers;// 壁などの障害物レイヤー
 
+    [SerializeField] float cursorHeightOffset = 1.5f; // UIを表示する高さ 
     // 内部パラメータ
     private float lockOnFactor = 0.3f;    // 距離による優先度重みづけ
     private float lockOnThreshold = 0.5f; // 正面判定の閾値
@@ -149,7 +150,26 @@ public class PlayerLockOn : MonoBehaviour
         // カーソル位置の更新
         if (lockOnCursor != null)
         {
-            lockOnCursor.transform.position = mainCamera.WorldToScreenPoint(targetObj.transform.position);
+            // 1. 敵の足元の座標を取得
+            Vector3 targetWorldPos = targetObj.transform.position;
+
+            // 2. 高さを足す (例: 1.5メートル上にずらす)
+            targetWorldPos.y += cursorHeightOffset;
+
+            // 3. スクリーン座標（画面上の2D座標）に変換
+            Vector3 screenPos = mainCamera.WorldToScreenPoint(targetWorldPos);
+
+            // 敵がカメラの「後ろ」にいる場合は表示しない
+            // screenPos.z がマイナスの場合はカメラの後ろにいる
+            if (screenPos.z > 0)
+            {
+                lockOnCursor.SetActive(true); // 見えている
+                lockOnCursor.transform.position = screenPos;
+            }
+            else
+            {
+                lockOnCursor.SetActive(false); // カメラの裏側なので隠す
+            }
         }
 
         // 距離による解除判定
