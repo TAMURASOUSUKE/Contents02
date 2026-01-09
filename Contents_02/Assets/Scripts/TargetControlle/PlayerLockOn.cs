@@ -20,15 +20,17 @@ public class PlayerLockOn : MonoBehaviour
 
     [SerializeField] float cursorHeightOffset = 1.5f; // UIを表示する高さ 
     // 内部パラメータ
-    private float lockOnFactor = 0.3f;    // 距離による優先度重みづけ
-    private float lockOnThreshold = 0.5f; // 正面判定の閾値
+    float lockOnFactor = 0.3f;    // 距離による優先度重みづけ
+    float lockOnThreshold = 0.5f; // 正面判定の閾値
 
     // 状態管理
-    public bool isLockOn = false;
-    private bool stickReturnFlag = true; // スティックが中央に戻ったかどうかのフラグ
-    private GameObject targetObj;
-    private Camera mainCamera;
-    private Transform cameraTransform;
+    bool isLockOn = false;
+    bool stickReturnFlag = true; // スティックが中央に戻ったかどうかのフラグ
+    Camera mainCamera;
+    Transform cameraTransform;
+
+    // 現在のターゲットのGetter
+    public GameObject TargetObj { get; private set; }
 
     // --- Input System 初期化処理 ---
     private void Awake()
@@ -83,10 +85,10 @@ public class PlayerLockOn : MonoBehaviour
             else
             {
                 // ロックオン開始
-                targetObj = GetLockOnTarget();
-                if (targetObj != null)
+                TargetObj = GetLockOnTarget();
+                if (TargetObj != null)
                 {
-                    EnableLockOn(targetObj);
+                    EnableLockOn(TargetObj);
                 }
                 else
                 {
@@ -141,7 +143,7 @@ public class PlayerLockOn : MonoBehaviour
         if (!isLockOn) return;
 
         // ターゲットが存在しない、または非アクティブになった場合
-        if (targetObj == null || !targetObj.activeInHierarchy)
+        if (TargetObj == null || !TargetObj.activeInHierarchy)
         {
             DisableLockOn();
             return;
@@ -151,7 +153,7 @@ public class PlayerLockOn : MonoBehaviour
         if (lockOnCursor != null)
         {
             // 1. 敵の足元の座標を取得
-            Vector3 targetWorldPos = targetObj.transform.position;
+            Vector3 targetWorldPos = TargetObj.transform.position;
 
             // 2. 高さを足す (例: 1.5メートル上にずらす)
             targetWorldPos.y += cursorHeightOffset;
@@ -173,7 +175,7 @@ public class PlayerLockOn : MonoBehaviour
         }
 
         // 距離による解除判定
-        float distance = Vector3.Distance(targetObj.transform.position, origin.position);
+        float distance = Vector3.Distance(TargetObj.transform.position, origin.position);
         if (distance > lockOnRange)
         {
             DisableLockOn();
@@ -183,15 +185,15 @@ public class PlayerLockOn : MonoBehaviour
     void EnableLockOn(GameObject target)
     {
         isLockOn = true;
-        targetObj = target;
-        playerCamera.ActiveLockOnCamera(targetObj);
+        TargetObj = target;
+        playerCamera.ActiveLockOnCamera(TargetObj);
         if (lockOnCursor) lockOnCursor.SetActive(true);
     }
 
     void DisableLockOn()
     {
         isLockOn = false;
-        targetObj = null;
+        TargetObj = null;
         playerCamera.InactiveLockOnCamera();
         if (lockOnCursor) lockOnCursor.SetActive(false);
     }
@@ -291,7 +293,7 @@ public class PlayerLockOn : MonoBehaviour
 
         foreach (var enemy in hitObjects)
         {
-            if (enemy == targetObj) continue; // 現在のターゲットは除外
+            if (enemy == TargetObj) continue; // 現在のターゲットは除外
 
             Vector3 enemyToCameraPos = cameraTransform.position - enemy.transform.position;
             Vector3 cameraToEnemyPos = enemy.transform.position - cameraTransform.position;

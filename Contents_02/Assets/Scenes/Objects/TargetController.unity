@@ -177,7 +177,7 @@ MonoBehaviour:
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
   m_DynamicPixelsPerUnit: 1
-  m_PresetInfoIsWorld: 1
+  m_PresetInfoIsWorld: 0
 --- !u!223 &450812546
 Canvas:
   m_ObjectHideFlags: 0
@@ -187,8 +187,8 @@ Canvas:
   m_GameObject: {fileID: 450812543}
   m_Enabled: 1
   serializedVersion: 3
-  m_RenderMode: 2
-  m_Camera: {fileID: 0}
+  m_RenderMode: 0
+  m_Camera: {fileID: 700414830}
   m_PlaneDistance: 100
   m_PixelPerfect: 0
   m_ReceivesEvents: 1
@@ -210,7 +210,7 @@ RectTransform:
   m_GameObject: {fileID: 450812543}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.01, y: 0.01, z: 0.01}
+  m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 764608952}
@@ -219,8 +219,8 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 10, y: 10}
-  m_Pivot: {x: 0.5, y: 0.5}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0, y: 0}
 --- !u!1 &460782122
 GameObject:
   m_ObjectHideFlags: 0
@@ -893,6 +893,50 @@ MonoBehaviour:
   m_LightCookieSize: {x: 1, y: 1}
   m_LightCookieOffset: {x: 0, y: 0}
   m_SoftShadowQuality: 0
+--- !u!1 &1152240931
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1152240933}
+  - component: {fileID: 1152240932}
+  m_Layer: 0
+  m_Name: SkillManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1152240932
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1152240931}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 98fb238893175184cab1e20cb2184b80, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &1152240933
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1152240931}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 963.8917, y: 679.8917, z: 3.6882424}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1354660405
 GameObject:
   m_ObjectHideFlags: 0
@@ -1133,6 +1177,7 @@ GameObject:
   - component: {fileID: 1542078525}
   - component: {fileID: 1542078524}
   - component: {fileID: 1542078523}
+  - component: {fileID: 1542078527}
   m_Layer: 2
   m_Name: Cube
   m_TagString: Untagged
@@ -1229,6 +1274,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1542078527
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1542078522}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: af5e872eabc2d7744ace6455b2c45a7c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1548665467
 GameObject:
   m_ObjectHideFlags: 0
@@ -1286,7 +1343,7 @@ MonoBehaviour:
   lockOnObstacleLayers:
     serializedVersion: 2
     m_Bits: 16
-  isLockOn: 0
+  cursorHeightOffset: 1.5
 --- !u!114 &1548665470
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1539,6 +1596,8 @@ MonoBehaviour:
   moveSpeed: 6
   rotateSpeed: 0.1
   gravity: -9.81
+  skillManager: {fileID: 1152240932}
+  lockOn: {fileID: 1548665469}
 --- !u!143 &1605330708
 CharacterController:
   m_ObjectHideFlags: 0
@@ -1574,3 +1633,4 @@ SceneRoots:
   - {fileID: 450812547}
   - {fileID: 1566285521}
   - {fileID: 1548665468}
+  - {fileID: 1152240933}

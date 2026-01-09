@@ -14,6 +14,9 @@ public class PlayerMovementTest : MonoBehaviour
     [SerializeField] private float moveSpeed = 5.0f;
     [SerializeField] private float rotateSpeed = 0.1f; // 回転のスムーズさ（秒）
     [SerializeField] private float gravity = -9.81f;
+    [SerializeField] SkillManager skillManager;
+    [SerializeField] PlayerLockOn lockOn;
+    SkillContext skillContext;
 
     // 内部変数
     private CharacterController controller;
@@ -45,6 +48,23 @@ public class PlayerMovementTest : MonoBehaviour
     {
         HandleGravity();
         HandleMovement();
+
+        skillManager.MoveSelection((int)inputActions.Player.SelectCommand.ReadValue<float>());
+        Debug.Log(skillManager.GetCurrentSkill());
+
+        if (inputActions.Player.InteractCommand.IsPressed())
+        {
+            if (lockOn.TargetObj == null) return;
+            // 対象の設定
+            skillContext.user = this.gameObject;
+            skillContext.target = lockOn.TargetObj;
+            skillContext.hitPosition = lockOn.TargetObj.transform.position;
+            skillContext.condition = skillManager.GetCurrentSkill();
+
+            // 送信
+            skillManager.InputSkillContext(skillContext);
+        }
+        
     }
 
     private void HandleMovement()
