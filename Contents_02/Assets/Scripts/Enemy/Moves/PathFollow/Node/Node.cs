@@ -16,4 +16,11 @@ public class Node
     /// 移動できるノードリスト
     /// </summary>
     public List<Node> nextNodes;
+
+    public Node(int _id, Vector3 _pos)
+    {
+        this.id = _id;
+        this.pos = _pos;
+        nextNodes = new List<Node>();
+    }
 }

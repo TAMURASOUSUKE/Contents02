@@ -12,6 +12,13 @@ public class PathFollow
         routeSo = _routeSo;
         next = routeSo.nodes[0];
     }
+
+    /// <summary>
+    /// ゴールまでの移動を計算し、移動目標を設定します
+    /// </summary>
+    /// <param name="_bb">
+    /// ブラックボード
+    /// </param>
     public void MoveTargetCalc(EnemyBlackBoardBase _bb)
     {
         if (IsCompleteMove(_bb))
@@ -38,21 +45,41 @@ public class PathFollow
             }
         }
     }
-    public void PathMoveCalc(EnemyBlackBoardBase _bb)
+
+    /// <summary>
+    /// ノードによる移動をランダムでします
+    /// </summary>
+    /// <param name="_bb">
+    /// ブラックボード
+    /// </param>
+    public void PathRandMoveCalc(EnemyBlackBoardBase _bb)
     {
         if(IsCompleteMove(_bb))
         {
+            if(next.nextNodes.Count == 0)
+            {
+                Debug.Log(next.id);
+            }
             // 現在のノードからけるノードリスト
-            List<Node> nextNodex = next.nextNodes;
+            List<Node> nextNodes = next.nextNodes;
             // 現在の目標ノードから、移動できるノードのインデックスをランダムに選ぶ
-            int index = Random.Range(0, nextNodex.Count);
+            int index = Random.Range(0, nextNodes.Count);
             // 移動目標変更
-            next = nextNodex[index];
+            next = nextNodes[index];
             _bb.moveTarget = next.pos;
         }
     }
 
-    public bool IsCompleteMove(EnemyBlackBoardBase _bb)
+    /// <summary>
+    /// 現在の移動目標に到達したかどうか
+    /// </summary>
+    /// <param name="_bb">
+    /// ブラックボード
+    /// </param>
+    /// <returns>
+    /// 到達したならtrue、してない間はfalse
+    /// </returns>
+    private bool IsCompleteMove(EnemyBlackBoardBase _bb)
     {
         // 移動目標がないならtrueを返す
         if(_bb.moveTarget == null)
@@ -60,7 +87,6 @@ public class PathFollow
             return true;
         }
 
-        Debug.Log("nullチャッククリア");
         // 移動目標との　距離が、停止距離より、短いならtrueを返す
         float dist = Vector3.Distance(_bb.pos, _bb.moveTarget.Value);
         if (dist <= _bb.stopDistance)

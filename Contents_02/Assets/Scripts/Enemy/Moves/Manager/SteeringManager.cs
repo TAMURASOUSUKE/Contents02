@@ -35,7 +35,7 @@ public class SteeringManager
                 Vector3 targetDir = (vec - (dot * info.normal)).normalized;
 
                 //目標ベクトルに必要な加速度を計算
-                vec = (targetDir * _bb.maxSpeed - vec);
+                vec = (targetDir * vec.magnitude - _bb.vel);
                 //--------------------------------------------------------
 
                 vec += -info.normal * info.strength;
