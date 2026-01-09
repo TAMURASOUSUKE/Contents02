@@ -3,9 +3,11 @@ using Unity.Cinemachine;
 
 public class PlayerCamera : MonoBehaviour
 {
+    [SerializeField] Camera mainCamera;
     [SerializeField] CinemachineCamera freeLookCamera;
     [SerializeField] CinemachineCamera lockOnCamera;
     [SerializeField] Transform playerTransform; // プレイヤーのTransform
+    [SerializeField] CinemachineOrbitalFollow freeLookOrbital;
 
     // 内部で作る「カメラ用回転軸」
     private GameObject lockOnPivot;
@@ -41,11 +43,11 @@ public class PlayerCamera : MonoBehaviour
                 if (dirToEnemy != Vector3.zero)
                 {
                     // ピボットを回転させる
-                    // ※Slerpを使うと少し遅れて追従する味付けも可能（今回は即時回転）
                     lockOnPivot.transform.rotation = Quaternion.LookRotation(dirToEnemy);
                 }
             }
         }
+
     }
 
     public void ResetFreeLookCamera()
@@ -65,11 +67,47 @@ public class PlayerCamera : MonoBehaviour
         lockOnCamera.LookAt = target.transform;
     }
 
+
     public void InactiveLockOnCamera()
     {
+        // 角度を合わせる
+        SynchronizeFreeLookAngles();
+
         lockOnCamera.Priority = LockOnCameraInactivePriority;
         lockOnCamera.LookAt = null;
-        // 解除時はFollowをプレイヤーに戻しておいても良いが、FreeLookに切り替わるのでそのままでもOK
+    }
+
+    // 現在のカメラの角度をFreeLookカメラのコントローラーに入れる
+    void SynchronizeFreeLookAngles()
+    {
+        if (freeLookCamera == null) return;
+
+        Vector3 cameraPos = mainCamera.transform.position;
+        Vector3 playerPos = playerTransform.position;
+
+        float currentDistance = Vector3.Distance(cameraPos, playerPos);
+        freeLookOrbital.Radius = currentDistance;
+
+        // カメラから見てプレイヤーはどこにいるかを知る
+        Vector3 direction = playerPos - cameraPos;
+
+        // 座標から角度を度数法で出す
+        float locationAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg;
+
+        freeLookOrbital.HorizontalAxis.Value = locationAngle;
+
+        float heightDiff = cameraPos.y - playerPos.y;
+
+        float horizontalDist = new Vector3(direction.x, 0, direction.z).magnitude;
+        float heightAngle = Mathf.Atan2(heightDiff, horizontalDist) * Mathf.Rad2Deg;
+
+        freeLookOrbital.VerticalAxis.Value = heightAngle;
+
+
+
+        // 切り替えの瞬間はダンピングを無視する
+        freeLookCamera.PreviousStateIsValid = false;
+        
     }
 
     public Transform GetLookAtTransform()

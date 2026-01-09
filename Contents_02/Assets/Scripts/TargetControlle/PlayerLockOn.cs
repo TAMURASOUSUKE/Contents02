@@ -262,7 +262,7 @@ public class PlayerLockOn : MonoBehaviour
         return (minDegree, target);
     }
 
-    // 左右切り替えの候補を探す
+    // 左右切り替えの候補を探す(タプルでターゲットと角度を返す)
     (float, GameObject) GetEnemyLeftOrRight(List<GameObject> hitObjects, string direction)
     {
         float degreep = Mathf.Atan2(cameraTransform.forward.x, cameraTransform.forward.z);
