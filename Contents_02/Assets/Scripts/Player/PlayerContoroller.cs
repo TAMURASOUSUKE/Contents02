@@ -1,4 +1,3 @@
-using System.Collections;
 using Unity.Cinemachine;
 using UnityEngine;
 
@@ -31,11 +30,11 @@ public class PlayerContoroller : MonoBehaviour
     [SerializeField] private float SLIDING_HIGHT = 1.0f;
 
     //接地判定するレイキャストの長さ
-    [SerializeField] private float CEARCH_GROUND_REYCAST = 0.2f;
+    [SerializeField] private float CEARCH_GROUND_REYCAST;
     //接地判定するレイキャストのオフセット
     [SerializeField] private Vector3 GROUND_REYCAST_OFFSET;
     //立った時に天井にぶつからないかチェックするレイキャストの長さ
-    [SerializeField] private float CEARCH_CEILING_REYCAST = 0.2f;
+    [SerializeField] private float CEARCH_CEILING_REYCAST;
     //立った時に天井にぶつからないかチェックするレイキャストのオフセット
     [SerializeField] private Vector3 CEILING_REYCAST_OFFSET;
     //リジッドボディのインスタンス
@@ -109,8 +108,6 @@ public class PlayerContoroller : MonoBehaviour
         cameraRootTransform = cinemachineOffset.transform;
         standingCameraHeight = cameraRootTransform.localPosition.y;
 
-        standingCenter = currentPos;
-
         float crouchingHeightRatio = CROUCH_HIGHT / NORMAL_HIGHT;
         crouchingCameraHeight = cameraRootTransform.transform.localPosition.y * crouchingHeightRatio;
         crouchingCenter = standingCenter * crouchingHeightRatio;
@@ -174,14 +171,14 @@ public class PlayerContoroller : MonoBehaviour
             mState = moveState.Sliding;
         }
 
-        if (moveAcions.Player.Jump.triggered)
-        {
-            isJump = true;
-        }
-
         if (moveVec.sqrMagnitude == 0)
         {
             mState = moveState.None;
+        }
+
+        if (moveAcions.Player.Jump.triggered)
+        {
+            isJump = true;
         }
 
         if(isCrouch)
@@ -242,16 +239,12 @@ public class PlayerContoroller : MonoBehaviour
         //rb.linearVelocity = velocity;
 
         transform.Translate(moveVec);
-
-
-
-        currentPos = transform.position;
-
+        GROUND_REYCAST_OFFSET.y = (-capsuleCollider.height / 2) + 0.1f;
 
         // 着地判定
-        Ray ray = new Ray(currentPos + GROUND_REYCAST_OFFSET, Vector3.down);
-        bool isGround = Physics.Raycast(ray, CEARCH_GROUND_REYCAST);
-        Debug.DrawRay(GROUND_REYCAST_OFFSET, Vector3.down * CEARCH_GROUND_REYCAST, Color.red);
+        Vector3 groundRayPos = transform.position + capsuleCollider.center + GROUND_REYCAST_OFFSET;
+        isGround = Physics.Raycast(groundRayPos, Vector3.down, CEARCH_GROUND_REYCAST);
+        Debug.DrawRay(groundRayPos, Vector3.down * CEARCH_GROUND_REYCAST, Color.red, 0.1f);
 
 
         // ジャンプ処理
@@ -272,7 +265,7 @@ public class PlayerContoroller : MonoBehaviour
         transform.Rotate(lookVec);
 
 
-        if (isCrouch && isCrouchAvailable)
+        if (isCrouch)
         {
             CrouchAction(true);
         }
@@ -281,7 +274,6 @@ public class PlayerContoroller : MonoBehaviour
             CrouchAction(false);
         }
     }
-
 
     private void CrouchAction(bool isCrouch)
     {
@@ -292,16 +284,29 @@ public class PlayerContoroller : MonoBehaviour
         float currentHeight = capsuleCollider.height;
         float targetHeight = isCrouch ? CROUCH_HIGHT : NORMAL_HIGHT;
 
-        // コライダーの中心
-        standingCenter = new Vector3( 0.0f, 0.9f, 0.0f );
-        crouchingCenter = new Vector3( 0.0f, 0.6f, 0.0f );
-
         // 現在の高さの取得と切り替える高さの選択(カメラ)
         float currentCameraHeight = cameraRootTransform.localPosition.y;
         float targetCameraHeight = isCrouch ? crouchingCameraHeight : standingCameraHeight;
 
-        // コライダーの中心の切り替え
-        capsuleCollider.center = isCrouch ? crouchingCenter : standingCenter;
+        // 頭上にオブジェクトがあるかの判定する用の変数
+        float headClearance = 0.1f; 
+        float rayLength = NORMAL_HIGHT - CROUCH_HIGHT + headClearance;
+        Vector3 ceilingRayPos = transform.position + capsuleCollider.center;
+        int exclude = LayerMask.GetMask("Camera");
+
+        if (currentHeight == CROUCH_HIGHT)
+        {
+            // 天井判定
+            isCeiling = Physics.Raycast(ceilingRayPos, Vector3.up, rayLength, ~exclude, QueryTriggerInteraction.Ignore);
+            Color rayColor = isCeiling ? Color.red : Color.green;
+            Debug.DrawRay(ceilingRayPos, Vector3.up * rayLength, rayColor, 0.1f);
+        }
+
+        if (isCeiling)
+        {
+            targetHeight = CROUCH_HIGHT;
+            targetCameraHeight = crouchingCameraHeight;
+        }
 
         // コライダーの高さの切り替え
         capsuleCollider.height = targetHeight;
@@ -313,9 +318,6 @@ public class PlayerContoroller : MonoBehaviour
                 targetCameraHeight,
                 cameraRootTransform.localPosition.z
             );
-
-        Debug.Log("実行中");
-
 
         isCrouchAvailable = true;
     }
