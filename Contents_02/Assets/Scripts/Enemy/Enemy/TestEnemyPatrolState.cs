@@ -3,11 +3,12 @@ using static Unity.Cinemachine.CinemachineDeoccluder;
 
 public class TestEnemyPatrolState:EnemyStateBase<TestEnemyBB>
 {
-    public override void StateUpdate(TestEnemyBB _bb)
+    public override EnemyStateBase<TestEnemyBB> StateUpdate(TestEnemyBB _bb)
     {
+        _bb.pathFollow.PathRandMoveCalc(_bb);
         _bb.steeringManager.AddSteering(_bb.obstacleAvoidance, 1.0f);
         _bb.steeringManager.AddSteering(_bb.fallAvoidance, 1.0f);
-        _bb.steeringManager.AddSteering(_bb.seek, 1.0f);
+        _bb.steeringManager.AddSteering(_bb.arrive, 1.0f);
         Vector3 vec = _bb.steeringManager.SteeringCalc(_bb);
 
 
@@ -26,5 +27,7 @@ public class TestEnemyPatrolState:EnemyStateBase<TestEnemyBB>
                 _bb.rb.linearVelocity = _bb.vel.normalized * _bb.maxSpeed;
             }
         }
+
+        return this;
     }
 }

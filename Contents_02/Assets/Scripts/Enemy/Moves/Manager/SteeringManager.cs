@@ -20,9 +20,13 @@ public class SteeringManager
             vec += intent.SteeringCalc(_bb);
         }
 
-        foreach(var avoid in avoidSteerings)
+        //RVO計算
+        vec = RVO.AdjustVec(_bb, vec);
+
+        //回避ステアリング計算
+        foreach (var avoid in avoidSteerings)
         {
-            if(avoid.TryGetAvoidance(_bb, out AvoidInfo info))
+            if (avoid.TryGetAvoidance(_bb, out AvoidInfo info))
             {
                 //移動ベクトルと、法線との内積
                 float dot = Vector3.Dot(info.normal, vec);
@@ -31,7 +35,7 @@ public class SteeringManager
                 Vector3 targetDir = (vec - (dot * info.normal)).normalized;
 
                 //目標ベクトルに必要な加速度を計算
-                vec = (targetDir * _bb.maxSpeed - vec);
+                vec = (targetDir * vec.magnitude - _bb.vel);
                 //--------------------------------------------------------
 
                 vec += -info.normal * info.strength;
