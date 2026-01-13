@@ -500,7 +500,7 @@ public class CreateField : MonoBehaviour
     /// <returns>コスト(範囲外等なんらかの理由で範囲外の場合は-1を返す)</returns>
     public int GetCost(Vector2Int position)
     {
-        if(position.x >= 0 && position.x <= fieldData.width && position.y >= 0 && position.y <= fieldData.depth)
+        if(position.x >= 1 && position.x < fieldData.width - 1 && position.y >= 1 && position.y < fieldData.depth - 1)
         {
             return costMap[position.x, position.y];
         }

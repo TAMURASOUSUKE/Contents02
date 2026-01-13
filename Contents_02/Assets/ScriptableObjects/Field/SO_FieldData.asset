@@ -36,6 +36,7 @@ MonoBehaviour:
     - {fileID: 4815685558678703585, guid: e02c6baf2151c5e4f97f11c1f92244c7, type: 3}
     - {fileID: 2971900541778414308, guid: 2b73e5f07c220b549b6287759cb452d2, type: 3}
     - {fileID: 9219564632268696491, guid: 408e2df61ecba664fa1fc79925223c0c, type: 3}
+    cost: 10
   - id: "\u30C6\u30B9\u30C83By3"
     size: 3
     partsHigh:
@@ -58,6 +59,7 @@ MonoBehaviour:
     - {fileID: 5176774174892677934, guid: d089ff9c87ae09f468885279dafbb53c, type: 3}
     - {fileID: 5176774174892677934, guid: d089ff9c87ae09f468885279dafbb53c, type: 3}
     - {fileID: 5176774174892677934, guid: d089ff9c87ae09f468885279dafbb53c, type: 3}
+    cost: 15
   - id: TestFixed
     size: 3
     partsHigh:
@@ -80,6 +82,7 @@ MonoBehaviour:
     - {fileID: 8410858848237938347, guid: 63aeb339480d8424fa9672cecb69cbed, type: 3}
     - {fileID: 8410858848237938347, guid: 63aeb339480d8424fa9672cecb69cbed, type: 3}
     - {fileID: 8410858848237938347, guid: 63aeb339480d8424fa9672cecb69cbed, type: 3}
+    cost: 4
   fixedRules:
   - position: {x: 15, y: 15}
     patternID: TestFixed
