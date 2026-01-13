@@ -38,6 +38,11 @@ public class CreateField : MonoBehaviour
     int prevCenterZ = int.MinValue; // 前フレームの中心Z
     int prevRadius = 0; // 前フレームの描画半径
 
+    // Enemy探索用のコスト設定
+    int edgeCost = -1;
+    int fillerCost = 1;
+    int[,] costMap; // コストをキャッシュする二次元配列
+
 
 
 
@@ -96,6 +101,8 @@ public class CreateField : MonoBehaviour
         positionCache = new Vector3[fieldData.width, fieldData.depth]; // Transfromへのアクセスを防ぐ
         // 埋めつくすときに判定するbool型のデータをフィールド分用意する
         bool[,] isOccupied = new bool[fieldData.width, fieldData.depth];
+        // コスト用も用意する
+        costMap = new int[fieldData.width, fieldData.depth];
 
         // 最初に固定配置を置く
         if(fieldData.fixedRules != null)
@@ -146,6 +153,7 @@ public class CreateField : MonoBehaviour
                     var (pHigh, pLow) = fieldData.GetRandomEdgePrefab(); // 端に来たときにランダムに端のプレファブを取得する
                     SpawnObject(new Vector2Int(x, z), pHigh, pLow, fieldHighParent.transform, fieldLowParent.transform);
                     isOccupied[x, z] = true;
+                    costMap[x, z] = edgeCost; // 壁コスト設定
                 }
             }
         }
@@ -219,6 +227,9 @@ public class CreateField : MonoBehaviour
                 {
                     var (pHigh, pLow) = fieldData.GetRandomFillerPrafab();
                     SpawnObject(new Vector2Int(x, z), pHigh, pLow, fieldHighParent.transform, fieldLowParent.transform);
+
+                    costMap[x, z] = fillerCost;
+                
                 }
             }
         }
@@ -277,6 +288,7 @@ public class CreateField : MonoBehaviour
                     // 生成を行いつつbool座標の場所をtrueにする
                     SpawnObject(new Vector2Int(currentX, currentZ), pattern.partsHigh[pIndex], pattern.partsLow[pIndex], pHigh, pLow);
                     occupiedMap[currentX, currentZ] = true;
+                    costMap[currentX, currentZ] = pattern.cost; // コストの設定
                 }
             }
         }
@@ -471,13 +483,27 @@ public class CreateField : MonoBehaviour
     }
 
     // マップの大きさを取得するGetter
-    public int GetFiledWidthCount()
+    public int GetWidthCount()
     {
         return fieldData.width;
     }
 
-    public int GetFiledDepthCount()
+    public int GetDepthCount()
     {
         return fieldData.depth;
+    }
+
+    /// <summary>
+    /// 指定されたグリッド座標からコストを取得する
+    /// </summary>
+    /// <param name="position">グリッド座標</param>
+    /// <returns>コスト(範囲外等なんらかの理由で範囲外の場合は-1を返す)</returns>
+    public int GetCost(Vector2Int position)
+    {
+        if(position.x >= 0 && position.x <= fieldData.width && position.y >= 0 && position.y <= fieldData.depth)
+        {
+            return costMap[position.x, position.y];
+        }
+        return -1; // 範囲外などの場合は-1を返す
     }
 }

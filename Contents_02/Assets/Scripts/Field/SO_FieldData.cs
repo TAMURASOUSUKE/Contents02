@@ -43,6 +43,8 @@ public class SO_FieldData : ScriptableObject
         public GameObject[] partsHigh; // それぞれのハイモデル
         [Header("パターンを構成する各ローモデル")]
         public GameObject[] partsLow; // それぞれのローモデル
+        [Header("A*計算用のコスト(複雑な地形ならコストを重くして下さい)")]
+        public int cost;
     }
 
     /// <summary>
