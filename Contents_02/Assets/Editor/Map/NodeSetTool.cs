@@ -5,6 +5,10 @@ using UnityEngine;
 public class NodeSetTool: EditorWindow
 {
     /// <summary>
+    /// ノードを定義するオブジェクト
+    /// </summary>
+    GameObject root;
+    /// <summary>
     /// 変更するSO
     /// </summary>
     SO_Nodes so;
@@ -17,6 +21,16 @@ public class NodeSetTool: EditorWindow
     /// ノードの表示サイズ
     /// </summary>
     float nodeSize = 1.0f;
+
+    /// <summary>
+    /// 設置するノードの役割
+    /// </summary>
+    NodeRole plantNodeRole;
+
+    /// <summary>
+    /// 設置するノードが出口だった時の出口方向
+    /// </summary>
+    NodeExitDir plantNodeExitDir;
 
     /// <summary>
     /// 接続モード
@@ -42,11 +56,28 @@ public class NodeSetTool: EditorWindow
     {
         GUILayout.Label("マップ上にノードを配置するツール");
 
+        GUILayout.Label("プレファブをシーン上に配置し、それに対してノードを設置していけばいいです。");
+        GUILayout.Label("プレファブのシーンで操作しても可能");
+
+        // ノードを定義するオブジェクトの代入用インスペクター
+        root = (GameObject)EditorGUILayout.ObjectField("ノードを定義するオブジェクト", root, typeof(GameObject), true);
+
         // SOの代入用インスペクター
         so = (SO_Nodes)EditorGUILayout.ObjectField("ノードを追加したいSO_Nodes", so, typeof(SO_Nodes), false);
 
         // ノードサイズの変更用スライダー
         nodeSize = EditorGUILayout.Slider("ノードサイズ", nodeSize, 0.1f, 10.0f);
+
+        // ノードの役割
+        plantNodeRole = (NodeRole)EditorGUILayout.EnumPopup("設置ノードの役割", plantNodeRole);
+
+        // 設置ノードが出口ノードだった場合
+        if(plantNodeRole == NodeRole.EXIT)
+        {
+            GUILayout.Label("NORTHがZ方向にプラス、EASTがX方向にプラスです。");
+            // 出口方向を決める
+            plantNodeExitDir = (NodeExitDir)EditorGUILayout.EnumPopup("出口方向", plantNodeExitDir);
+        }
 
         // 設置モード切り替え
         GUILayout.Label("設置モード切り替え\nチェックが入っている間ノードの設置ができます。");
@@ -80,7 +111,7 @@ public class NodeSetTool: EditorWindow
     void PlantNode(Event _e)
     {
         // nullチェック
-        if (so == null)
+        if (so == null || root == null)
         {
             return;
         }
@@ -105,13 +136,23 @@ public class NodeSetTool: EditorWindow
             return;
         }
 
+
         if (_e.type == EventType.MouseDown && _e.button == 0)
         {
             // Undo作成
             Undo.RecordObject(so, "add node");
+
             // ノード作成
             // ノードIDは0から、追加された順
-            Node node = new Node(so.nodes.Count, hitinfo.point);
+            // 位置はオブジェクトの相対座標で取る
+            Node node = new Node(so.nodes.Count, hitinfo.point - root.transform.position);
+            // 生成ノードの役割が出口なら、追加情報
+            if (plantNodeRole == NodeRole.EXIT)
+            {
+                node.role = NodeRole.EXIT;
+                node.exitDir = plantNodeExitDir;
+            }
+
             // リストに追加
             so.nodes.Add(node);
             // 通知
@@ -216,7 +257,7 @@ public class NodeSetTool: EditorWindow
     void SelectNode(Event _e)
     {
         // nullチェック
-        if (so == null)
+        if (so == null || root == null)
         {
             return;
         }
@@ -236,7 +277,7 @@ public class NodeSetTool: EditorWindow
         foreach (Node node in so.nodes)
         {
             //距離判定
-            if (HandleUtility.DistanceToCircle(node.pos, nodeSize) <= 0f)
+            if (HandleUtility.DistanceToCircle(node.pos + root.transform.position, nodeSize) <= 0f)
             {
                 // 選択されたノードが埋まってるかどうか
                 if (select == null)
@@ -278,7 +319,7 @@ public class NodeSetTool: EditorWindow
     void DrawNode(Event _e)
     {
         // nullチェック
-        if (so == null)
+        if (so == null || root == null)
         {
             return;
         }
@@ -304,7 +345,16 @@ public class NodeSetTool: EditorWindow
                 }
             }
 
-            Handles.SphereHandleCap(0, node.pos, Quaternion.identity, nodeSize, EventType.Repaint);
+            if (node.role == NodeRole.NORMAL)
+            {
+                Handles.SphereHandleCap(0, node.pos + root.transform.position, Quaternion.identity, nodeSize, EventType.Repaint);
+
+            }
+            else
+            {
+                Quaternion rot = Quaternion.LookRotation(node.exitDir.ToVector3());
+                Handles.ArrowHandleCap(0, node.pos + root.transform.position, rot, nodeSize, EventType.Repaint);
+            }
 
             // 色を元に戻す
             Handles.color = prev;
@@ -320,7 +370,7 @@ public class NodeSetTool: EditorWindow
     void DrawConnection(Event _e)
     {
         // nullチェック
-        if(so == null)
+        if(so == null || root == null)
         {
             return;
         }
@@ -349,7 +399,7 @@ public class NodeSetTool: EditorWindow
                         continue;
                     }
 
-                    Handles.DrawLine(node.pos, next.pos);
+                    Handles.DrawLine(node.pos + root.transform.position, next.pos + root.transform.position);
                 }
             }
         }

@@ -27,6 +27,6 @@ public class TestEnemy : EnemyBase<TestEnemyBB>
     // Update is called once per frame
     void FixedUpdate()
     {
-        state.StateUpdate(bb);
+        state = state.StateUpdate(bb);
     }
 }
