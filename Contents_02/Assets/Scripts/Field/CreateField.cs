@@ -46,7 +46,7 @@ public class CreateField : MonoBehaviour
 
 
 
-    void Start()
+    void Awake()
     {
         // デバッグ用(毎回同じ配列でデバッグしたいならコメントを外す)
         // Random.InitState(12345);
