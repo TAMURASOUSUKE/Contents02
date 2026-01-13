@@ -1,4 +1,5 @@
 using Unity.Cinemachine;
+using Unity.VisualScripting;
 using UnityEngine;
 
 
@@ -29,6 +30,7 @@ public class PlayerContoroller : MonoBehaviour
     //スライディング時
     [SerializeField] private float SLIDING_HIGHT = 1.0f;
 
+    [Header("レイの各種設定")]
     //接地判定するレイキャストの長さ
     [SerializeField] private float CEARCH_GROUND_REYCAST;
     //接地判定するレイキャストのオフセット
@@ -65,6 +67,8 @@ public class PlayerContoroller : MonoBehaviour
     private bool isGround;
     //天井の有無の判定フラグ
     private bool isCeiling;
+    //
+    private bool isForward;
 
     protected InputSystem_Actions moveAcions;
 
@@ -75,6 +79,8 @@ public class PlayerContoroller : MonoBehaviour
 
     private float crouchingCameraHeight;
     private Vector3 crouchingCenter;
+
+    private float activeSlidingTime; 
 
 
     private CapsuleCollider capsuleCollider;
@@ -133,57 +139,60 @@ public class PlayerContoroller : MonoBehaviour
     public void GetMoveState()
     {
 
-
-        if(moveVec.sqrMagnitude > 0)
+        if (!isSliding)
         {
-            mState = moveState.Walk;
-        }
 
-        if (moveAcions.Player.Sprint.triggered)
-        {
-            isSprint = !isSprint;
-        }
-
-        if (moveAcions.Player.Crouch.triggered)
-        {
-            if(isCrouchAvailable)
+            if (moveVec.sqrMagnitude > 0)
             {
-                isCrouch = !isCrouch;
+                mState = moveState.Walk;
             }
-        }
 
-        if (isSprint && isCrouch)
-        {
-            isSliding = true;
-        }
-        else
-        {
-            isSliding = false;
-        }
+            if (moveAcions.Player.Sprint.triggered)
+            {
+                isSprint = !isSprint;
+            }
 
-        if (isSprint)
-        {
-            mState = moveState.Sprint;
-        }
+            if (moveAcions.Player.Crouch.triggered)
+            {
+                if (isCrouchAvailable)
+                {
+                    isCrouch = !isCrouch;
+                }
+            }
 
-        if (isSliding)
-        {
-            mState = moveState.Sliding;
-        }
+            if (isSprint && isCrouch)
+            {
+                isSliding = true;
+            }
+            else
+            {
+                isSliding = false;
+            }
 
-        if (moveVec.sqrMagnitude == 0)
-        {
-            mState = moveState.None;
-        }
+            if (isSprint)
+            {
+                mState = moveState.Sprint;
+            }
 
-        if (moveAcions.Player.Jump.triggered)
-        {
-            isJump = true;
-        }
+            if (isSliding)
+            {
+                mState = moveState.Sliding;
+            }
 
-        if(isCrouch)
-        {
-            mState = moveState.Crouch;
+            if (moveVec.sqrMagnitude == 0)
+            {
+                mState = moveState.None;
+            }
+
+            if (moveAcions.Player.Jump.triggered)
+            {
+                isJump = true;
+            }
+
+            if (isCrouch)
+            {
+                mState = moveState.Crouch;
+            }
         }
 
         Debug.Log(mState);
@@ -222,13 +231,19 @@ public class PlayerContoroller : MonoBehaviour
                 break;
             case moveState.Crouch:
 
-                moveVec = moveVec * CROUCH_SPEED;
+                moveVec =  moveVec * CROUCH_SPEED;
                 break;
             case moveState.Sliding:
                 
                 // スライディングの場合はフラグを立てる
                 isSliding = true;
                 break;
+        }
+
+        if (isSliding) 
+        {
+            SlidingAction();
+            return;
         }
 
         // 位置に値を追加していく
@@ -246,6 +261,7 @@ public class PlayerContoroller : MonoBehaviour
         isGround = Physics.Raycast(groundRayPos, Vector3.down, CEARCH_GROUND_REYCAST);
         Debug.DrawRay(groundRayPos, Vector3.down * CEARCH_GROUND_REYCAST, Color.red, 0.1f);
 
+        transform.Rotate(lookVec);
 
         // ジャンプ処理
         if (isJump)
@@ -262,7 +278,6 @@ public class PlayerContoroller : MonoBehaviour
         }
 
 
-        transform.Rotate(lookVec);
 
 
         if (isCrouch)
@@ -320,6 +335,56 @@ public class PlayerContoroller : MonoBehaviour
             );
 
         isCrouchAvailable = true;
+    }
+
+    private void SlidingAction()
+    {
+        activeSlidingTime += Time.deltaTime;
+
+        // 頭上にオブジェクトがあるかの判定する用の変数
+        float headClearance = 0.1f;
+        float rayLength = NORMAL_HIGHT - CROUCH_HIGHT + headClearance;
+        Vector3 ceilingRayPos = transform.position + capsuleCollider.center;
+        int exclude = LayerMask.GetMask("Camera");
+
+        // 天井判定
+        isCeiling = Physics.Raycast(ceilingRayPos, Vector3.up, rayLength, ~exclude, QueryTriggerInteraction.Ignore);
+        Color rayColor = isCeiling ? Color.red : Color.green;
+        Debug.DrawRay(ceilingRayPos, Vector3.up * rayLength, rayColor, 0.1f);
+
+        // 前にオブジェクトがあるかの判定する用の変数
+        float rayLengthForward = 0.7f;
+        Vector3 forwardRayPos = transform.position + capsuleCollider.center;
+        forwardRayPos.y += 0.1f;
+
+        // 正面判定
+        isForward = Physics.Raycast(forwardRayPos, Vector3.forward, rayLengthForward, ~exclude, QueryTriggerInteraction.Ignore);
+        rayColor = isForward ? Color.red : Color.green;
+        Debug.DrawRay(forwardRayPos, Vector3.back * rayLengthForward, rayColor, 0.1f);
+
+        if(isForward || activeSlidingTime >= 2.0f)
+        {
+            activeSlidingTime = 0.0f;
+            if (isCeiling)
+            {
+                isSprint = false;
+
+            }
+            else
+            {
+                isCrouch = false;
+
+            }
+
+            isSliding = false;
+            return; ;
+        }
+
+        capsuleCollider.height = SLIDING_HIGHT;
+
+        transform.Translate(Vector3.forward * SLIDING_SPEED, Space.Self);
+
+
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
