@@ -469,4 +469,15 @@ public class CreateField : MonoBehaviour
         }
         return false; // 全員と離れていたのでfalseを返す
     }
+
+    // マップの大きさを取得するGetter
+    public int GetFiledWidthCount()
+    {
+        return fieldData.width;
+    }
+
+    public int GetFiledDepthCount()
+    {
+        return fieldData.depth;
+    }
 }
