@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Unity.Cinemachine;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -42,11 +43,13 @@ public class PlayerLockOn : MonoBehaviour
     private void OnEnable()
     {
         inputActions.Enable();
+        CinemachineCore.CameraUpdatedEvent.AddListener(OncameraUpdated);
     }
 
     private void OnDisable()
     {
         inputActions.Disable();
+        CinemachineCore.CameraUpdatedEvent?.RemoveListener(OncameraUpdated);
     }
     // ----------------------------
 
@@ -63,14 +66,31 @@ public class PlayerLockOn : MonoBehaviour
 
     void Update()
     {
-        // 1. ロックオンボタン入力の処理
+        // ロックオンボタン入力の処理
         HandleLockOnInput();
 
-        // 2. ターゲット切り替え入力の処理（右スティック）
+        // ターゲット切り替え入力の処理（右スティック）
         HandleTargetSwitching();
 
-        // 3. ロックオン中の状態更新（距離判定、カーソル移動）
-        UpdateLockOnState();
+        // カメラのリセット
+        InputResetCamera();
+    }
+
+    // イベント処理としてカメラの移動後に合わせてカーソルなどを動かす
+    void OncameraUpdated(CinemachineBrain brain)
+    {
+        if (isLockOn)
+        {
+            UpdateLockOnState();
+        }
+    }
+
+    void InputResetCamera()
+    {
+        if (inputActions.Player.CameraReset.IsPressed())
+        {
+            playerCamera.ResetFreeLookCamera();
+        }
     }
 
     void HandleLockOnInput()
@@ -103,7 +123,7 @@ public class PlayerLockOn : MonoBehaviour
     {
         if (!isLockOn) return;
 
-        Vector2 inputVal = inputActions.Player.Look.ReadValue<Vector2>();
+        Vector2 inputVal = inputActions.Player.TargetChange.ReadValue<Vector2>();
         float inputX = inputVal.x;
 
         // スティックを大きく倒した時
@@ -182,6 +202,7 @@ public class PlayerLockOn : MonoBehaviour
         }
     }
 
+    // ロックオン起動
     void EnableLockOn(GameObject target)
     {
         isLockOn = true;
@@ -190,6 +211,7 @@ public class PlayerLockOn : MonoBehaviour
         if (lockOnCursor) lockOnCursor.SetActive(true);
     }
 
+    // ロックオン解除
     void DisableLockOn()
     {
         isLockOn = false;
