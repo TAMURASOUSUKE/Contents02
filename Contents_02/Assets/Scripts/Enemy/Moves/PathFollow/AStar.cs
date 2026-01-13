@@ -1,8 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.Analytics;
-using UnityEngine.Rendering;
 
 public class AStar
 {
@@ -103,7 +101,7 @@ public class AStar
         return result.ToArray();
     }
 
-    static public Cell[] Calc(Cell _start, Cell _goal)
+    static public Cell[] Calc(Cell _start, Cell _goal, CreateField _field)
     {
         // 結果代入用
         List<Cell> result = new List<Cell>();
@@ -131,14 +129,21 @@ public class AStar
             foreach (Vector2Int dir in Cell.DIR_8)
             {
                 // 隣接セルの計算
+                Vector2Int nextPos = currentACell.cell.pos + dir;
                 Cell nextCell = new Cell
                     (
-                    currentACell.cell.pos + dir,
-                    0// コスト取得関数
+                    nextPos,
+                    _field.GetCost(nextPos)
                     );
 
                 // マップ外の場合スキップ
-                if(nextCell.pos.x < 0 || nextCell.pos.x > 31 || nextCell.pos.y < 0 || nextCell.pos.y > 31)//マップサイズ取得関数をのちに入れる
+                if (nextCell.pos.x < 0 || nextCell.pos.x > _field.GetWidthCount() || nextCell.pos.y < 0 || nextCell.pos.y > _field.GetDepthCount())
+                {
+                    continue;
+                }
+
+                // マップ端の場合スキップ
+                if (nextCell.cost < 0)
                 {
                     continue;
                 }
