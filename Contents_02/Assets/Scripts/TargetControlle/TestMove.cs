@@ -1,115 +1,123 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-[RequireComponent(typeof(CharacterController))]
-public class PlayerMovementTest : MonoBehaviour
+public class PlayerMovementTest : MonoBehaviour, ISkillReceiver
 {
-    // ========================================================================
-    // ★重要★: 生成したInput Systemのクラス名に書き換えてください
-    // 例: private PlayerControls inputActions;
     private InputSystem_Actions inputActions;
-    // ========================================================================
 
     [Header("Settings")]
-    [SerializeField] private float moveSpeed = 5.0f;
-    [SerializeField] private float rotateSpeed = 0.1f; // 回転のスムーズさ（秒）
-    [SerializeField] private float gravity = -9.81f;
+    [SerializeField] float moveSpeed = 5.0f;
+    [SerializeField] float rotateSpeed = 0.1f;
+    [SerializeField] float gravity = -9.81f;
+    [SerializeField] float speedUpTime = 10.0f;
     [SerializeField] SkillManager skillManager;
     [SerializeField] PlayerLockOn lockOn;
-    SkillContext skillContext;
 
-    // 内部変数
-    private CharacterController controller;
-    private Transform cameraTransform;
-    private Vector3 playerVelocity; // 重力落下用
-    private float turnSmoothVelocity; // 回転計算用の一時変数
-    private bool isGrounded;
+    StatusController statusController;
+    CharacterController controller;
+    Transform cameraTransform;
+    Vector3 verticalVelocity; // 垂直方向（重力）の速度
+    float turnSmoothVelocity;
+    bool isGrounded;
 
     private void Awake()
     {
-        // インスタンス生成（クラス名を合わせる）
+        statusController = new StatusController();
         inputActions = new InputSystem_Actions();
-
         controller = GetComponent<CharacterController>();
         cameraTransform = Camera.main.transform;
     }
 
-    private void OnEnable()
-    {
-        inputActions.Enable();
-    }
-
-    private void OnDisable()
-    {
-        inputActions.Disable();
-    }
+    private void OnEnable() => inputActions.Enable();
+    private void OnDisable() => inputActions.Disable();
 
     private void Update()
     {
-        HandleGravity();
-        HandleMovement();
+        // 1. 移動計算（横方向）
+        Vector3 moveVector = CalculateMovement();
+
+        // 2. 重力計算（縦方向）
+        CalculateGravity();
+
+        // 3. 最終的な移動（合成して1回だけMoveする）
+        // (横移動 * スピード) + (縦移動)
+        Vector3 finalMovement = (moveVector * (statusController.Has(SkillMasks.SpeedUp) ? moveSpeed * 2.0f : moveSpeed)) + verticalVelocity;
+        controller.Move(finalMovement * Time.deltaTime);
+
+
 
         skillManager.MoveSelection((int)inputActions.Player.SelectCommand.ReadValue<float>());
-        Debug.Log(skillManager.GetCurrentSkill());
 
-        if (inputActions.Player.InteractCommand.IsPressed())
+        if (inputActions.Player.InteractCommand.WasPressedThisFrame())
         {
-            if (lockOn.TargetObj == null) return;
-            // 対象の設定
+            SkillContext skillContext;
             skillContext.user = this.gameObject;
             skillContext.target = lockOn.TargetObj;
-            skillContext.hitPosition = lockOn.TargetObj.transform.position;
-            skillContext.condition = skillManager.GetCurrentSkill();
-
-            // 送信
+            if (lockOn.TargetObj != null)
+            {
+                skillContext.hitPosition = lockOn.TargetObj.transform.position;
+            }
+            else
+            {
+                skillContext.hitPosition = this.gameObject.transform.position;
+            }
+                skillContext.condition = skillManager.GetCurrentSkill();
             skillManager.InputSkillContext(skillContext);
         }
-        
+
+        if (statusController.Has(SkillMasks.SpeedUp))
+        {
+            Debug.Log("スピードアップ中");
+        }
+        else
+        {
+            Debug.Log("通常速度");
+        }
     }
 
-    private void HandleMovement()
+    // 重力計算（Moveはしない）
+    void CalculateGravity()
     {
-        // Input Systemから入力を取得 (Vector2)
-        // "Player" や "Move" はInput Actionsの設定名に合わせてください
+        isGrounded = controller.isGrounded;
+
+        if (isGrounded && verticalVelocity.y < 0)
+        {
+            verticalVelocity.y = -2f; // 接地時のリセット
+        }
+
+        verticalVelocity.y += gravity * Time.deltaTime;
+    }
+
+    // 移動方向の計算をしてベクトルを返す
+    private Vector3 CalculateMovement()
+    {
         Vector2 input = inputActions.Player.Move.ReadValue<Vector2>();
 
-        // 入力がある場合のみ移動処理を行う
         if (input.sqrMagnitude >= 0.01f)
         {
-            // 1. 入力値を3Dベクトルに変換（Yは0）
-            // Normalizeしないと斜め移動が速くなる可能性があるが、InputSystemの設定次第
             Vector3 direction = new Vector3(input.x, 0f, input.y).normalized;
-
-            // 2. カメラの向きを考慮した進行方向の角度を計算
-            // Atan2(x, z) で入力の角度を求め、カメラのY軸回転を加算する
             float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cameraTransform.eulerAngles.y;
 
-            // 3. キャラクターの向きをスムーズに回転させる
             float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, rotateSpeed);
             transform.rotation = Quaternion.Euler(0f, angle, 0f);
 
-            // 4. 計算した角度の方向に移動ベクトルを作成
             Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
 
-            // 5. CharacterControllerで移動
-            controller.Move(moveDir.normalized * moveSpeed * Time.deltaTime);
+            // normalizedされた方向ベクトルを返す
+            return moveDir.normalized;
         }
+
+        return Vector3.zero; // 入力がないときは動かない
     }
 
-    private void HandleGravity()
+    // スキルを受け取る
+    public void OnReceiveSkill(SkillContext skillContext_)
     {
-        // 接地判定
-        isGrounded = controller.isGrounded;
+        if (skillContext_.target != gameObject) return;
 
-        if (isGrounded && playerVelocity.y < 0)
+        if(skillContext_.condition == SkillMasks.SpeedUp)
         {
-            playerVelocity.y = -2f; // 接地時は少しだけ下向きの力を残して浮き上がりを防ぐ
+            statusController.AddTimedEffect(skillContext_.condition, speedUpTime);
         }
-
-        // 重力加算
-        playerVelocity.y += gravity * Time.deltaTime;
-
-        // 落下移動
-        controller.Move(playerVelocity * Time.deltaTime);
     }
 }

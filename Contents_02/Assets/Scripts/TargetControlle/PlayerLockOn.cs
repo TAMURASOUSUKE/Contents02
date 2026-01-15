@@ -1,20 +1,18 @@
 using System.Collections.Generic;
 using Unity.Cinemachine;
-using Unity.Mathematics;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 public class PlayerLockOn : MonoBehaviour
 {
 
     private InputSystem_Actions inputActions;
 
-    [Header("References")]
+    [Header("オブジェクト")]
     [SerializeField] PlayerCamera playerCamera; // カメラ制御スクリプト
     [SerializeField] Transform origin;          // プレイヤーの中心座標
     [SerializeField] GameObject lockOnCursor;   // ロックオンマーカーUI
 
-    [Header("Settings")]
+    [Header("設定")]
     [SerializeField] float lockOnRange = 20.0f;     // ロックオン可能距離
     [SerializeField] LayerMask lockOnLayers;        // 敵のレイヤー
     [SerializeField] LayerMask lockOnObstacleLayers;// 壁などの障害物レイヤー
@@ -42,6 +40,7 @@ public class PlayerLockOn : MonoBehaviour
 
     private void OnEnable()
     {
+        // UI等を含めた実行順序を合わせるためイベント処理を行う
         inputActions.Enable();
         CinemachineCore.CameraUpdatedEvent.AddListener(OncameraUpdated);
     }
@@ -85,6 +84,7 @@ public class PlayerLockOn : MonoBehaviour
         }
     }
 
+    // カメラリセット処理
     void InputResetCamera()
     {
         if (inputActions.Player.CameraReset.IsPressed())
@@ -93,6 +93,7 @@ public class PlayerLockOn : MonoBehaviour
         }
     }
 
+    // ロックオン開始処理
     void HandleLockOnInput()
     {
         if (inputActions.Player.LockOn.WasPressedThisFrame())
@@ -119,22 +120,25 @@ public class PlayerLockOn : MonoBehaviour
         }
     }
 
+    // ターゲット切り替え処理
     void HandleTargetSwitching()
     {
         if (!isLockOn) return;
 
-        Vector2 inputVal = inputActions.Player.TargetChange.ReadValue<Vector2>();
-        float inputX = inputVal.x;
+        float inputVal = inputActions.Player.TargetChange.ReadValue<float>();
+        float threshold = 0.5f;
 
+        // ★この行を追加して、Console画面で数値が出るか確認！
+        if (inputVal != 0) Debug.Log("入力値: " + inputVal);
         // スティックを大きく倒した時
-        if (Mathf.Abs(inputX) > 0.8f)
+        if (Mathf.Abs(inputVal) > threshold)
         {
             if (stickReturnFlag)
             {
                 stickReturnFlag = false; // 連続切り替え防止
                 GameObject nextTarget = null;
 
-                if (inputX > 0)
+                if (inputVal <= 0)
                 {
                     // 右入力
                     nextTarget = GetLockOnTargetLeftOrRight("right");
@@ -152,7 +156,7 @@ public class PlayerLockOn : MonoBehaviour
             }
         }
         // スティックが中央付近に戻ったらフラグをリセット
-        else if (Mathf.Abs(inputX) < 0.2f)
+        else if (Mathf.Abs(inputVal) < 0.2f)
         {
             stickReturnFlag = true;
         }
@@ -338,7 +342,7 @@ public class PlayerLockOn : MonoBehaviour
             }
 
             // 距離による重みづけ
-            degree = degree + degree * (enemyToCameraPos.magnitude / 500.0f) * lockOnFactor;
+            degree = degree + degree * (enemyToCameraPos.magnitude / 1.0f) * lockOnFactor;
 
             if (Mathf.Abs(minDegree) >= Mathf.Abs(degree))
             {

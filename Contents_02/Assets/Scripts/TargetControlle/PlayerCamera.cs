@@ -31,7 +31,7 @@ public class PlayerCamera : MonoBehaviour
         float playerAngleY = playerTransform.rotation.eulerAngles.y;
 
         // ï‚ê≥Ç∑ÇÈ
-        float targetAngle = playerAngleY + 180;
+        float targetAngle = playerAngleY;
 
         // ë„ì¸Ç∑ÇÈ
         freeLookOrbital.HorizontalAxis.Value = targetAngle;

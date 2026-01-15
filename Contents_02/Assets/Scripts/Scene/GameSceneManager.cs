@@ -28,6 +28,10 @@ public class GameSceneManager : SceneManagerBase
 
     protected override void Awake()
     {
+
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+
         base.Awake();
         CreateCloneMaterial(image);
 
