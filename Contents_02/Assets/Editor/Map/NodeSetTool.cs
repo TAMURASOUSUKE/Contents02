@@ -1,13 +1,14 @@
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using UnityEditor.SceneManagement;
 
 public class NodeSetTool: EditorWindow
 {
     /// <summary>
     /// ノードを定義するオブジェクト
     /// </summary>
-    GameObject root;
+    GameObject rootPrefab;
     /// <summary>
     /// 変更するSO
     /// </summary>
@@ -56,11 +57,14 @@ public class NodeSetTool: EditorWindow
     {
         GUILayout.Label("マップ上にノードを配置するツール");
 
-        GUILayout.Label("プレファブをシーン上に配置し、それに対してノードを設置していけばいいです。");
-        GUILayout.Label("プレファブのシーンで操作しても可能");
+        GUILayout.Label("オブジェクト欄にプレファブを入れて、\nSO欄に対応した、SOを入れて設置してください");
 
         // ノードを定義するオブジェクトの代入用インスペクター
-        root = (GameObject)EditorGUILayout.ObjectField("ノードを定義するオブジェクト", root, typeof(GameObject), true);
+        rootPrefab = (GameObject)EditorGUILayout.ObjectField("ノードを定義するオブジェクト", rootPrefab, typeof(GameObject), false);
+        if(rootPrefab != null)
+        {
+            PrefabStageUtility.OpenPrefab(AssetDatabase.GetAssetPath(rootPrefab));
+        }
 
         // SOの代入用インスペクター
         so = (SO_Nodes)EditorGUILayout.ObjectField("ノードを追加したいSO_Nodes", so, typeof(SO_Nodes), false);
@@ -111,7 +115,7 @@ public class NodeSetTool: EditorWindow
     void PlantNode(Event _e)
     {
         // nullチェック
-        if (so == null || root == null)
+        if (so == null || rootPrefab == null)
         {
             return;
         }
@@ -145,7 +149,7 @@ public class NodeSetTool: EditorWindow
             // ノード作成
             // ノードIDは0から、追加された順
             // 位置はオブジェクトの相対座標で取る
-            Node node = new Node(so.nodes.Count, hitinfo.point - root.transform.position);
+            Node node = new Node(so.nodes.Count, hitinfo.point - rootPrefab.transform.position);
             // 生成ノードの役割が出口なら、追加情報
             if (plantNodeRole == NodeRole.EXIT)
             {
@@ -257,7 +261,7 @@ public class NodeSetTool: EditorWindow
     void SelectNode(Event _e)
     {
         // nullチェック
-        if (so == null || root == null)
+        if (so == null || rootPrefab == null)
         {
             return;
         }
@@ -277,7 +281,7 @@ public class NodeSetTool: EditorWindow
         foreach (Node node in so.nodes)
         {
             //距離判定
-            if (HandleUtility.DistanceToCircle(node.pos + root.transform.position, nodeSize) <= 0f)
+            if (HandleUtility.DistanceToCircle(node.pos + rootPrefab.transform.position, nodeSize) <= 0f)
             {
                 // 選択されたノードが埋まってるかどうか
                 if (select == null)
@@ -319,7 +323,7 @@ public class NodeSetTool: EditorWindow
     void DrawNode(Event _e)
     {
         // nullチェック
-        if (so == null || root == null)
+        if (so == null || rootPrefab == null)
         {
             return;
         }
@@ -347,13 +351,13 @@ public class NodeSetTool: EditorWindow
 
             if (node.role == NodeRole.NORMAL)
             {
-                Handles.SphereHandleCap(0, node.pos + root.transform.position, Quaternion.identity, nodeSize, EventType.Repaint);
+                Handles.SphereHandleCap(0, node.pos + rootPrefab.transform.position, Quaternion.identity, nodeSize, EventType.Repaint);
 
             }
             else
             {
                 Quaternion rot = Quaternion.LookRotation(node.exitDir.ToVector3());
-                Handles.ArrowHandleCap(0, node.pos + root.transform.position, rot, nodeSize, EventType.Repaint);
+                Handles.ArrowHandleCap(0, node.pos + rootPrefab.transform.position, rot, nodeSize, EventType.Repaint);
             }
 
             // 色を元に戻す
@@ -370,7 +374,7 @@ public class NodeSetTool: EditorWindow
     void DrawConnection(Event _e)
     {
         // nullチェック
-        if(so == null || root == null)
+        if(so == null || rootPrefab == null)
         {
             return;
         }
@@ -399,7 +403,7 @@ public class NodeSetTool: EditorWindow
                         continue;
                     }
 
-                    Handles.DrawLine(node.pos + root.transform.position, next.pos + root.transform.position);
+                    Handles.DrawLine(node.pos + rootPrefab.transform.position, next.pos + rootPrefab.transform.position);
                 }
             }
         }

@@ -7,7 +7,7 @@ public class ACell
     /// </summary>
     public Cell cell;
     /// <summary>
-    /// 推定移動コスト
+    /// 推定合計移動コスト
     /// </summary>
     public int cost;
     /// <summary>
