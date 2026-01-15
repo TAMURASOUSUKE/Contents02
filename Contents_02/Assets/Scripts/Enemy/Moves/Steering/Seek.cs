@@ -11,13 +11,13 @@ public class Seek : IntentionSteering
     public override Vector3 SteeringCalc(EnemyBlackBoardBase _bb)
     {
         //ターゲットが決まってないなら移動しない
-        if(_bb.target == null)
+        if(_bb.moveTarget == null)
         {
             return Vector3.zero;
         }
 
         //目標への最大速度ベクトル
-        Vector3 maxVec = (_bb.target.position - _bb.pos).normalized * _bb.maxSpeed;
+        Vector3 maxVec = (_bb.moveTarget.Value - _bb.pos).normalized * _bb.maxSpeed;
         //加速度
         Vector3 steering = maxVec - _bb.rb.linearVelocity;
 

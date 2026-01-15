@@ -10,6 +10,9 @@ public class SO_EnemyData : ScriptableObject
     //最大加速度
     [Header("最大加速度")]
     public float maxAcc = 20.0f;
+    //停止距離
+    [Header("目標地点との停止する距離")]
+    public float stopDistance;
 
     //遅くなる半径(減速処理の時に使う)
     [Header("遅くなる半径(減速処理の時に使う)")]
@@ -45,6 +48,10 @@ public class SO_EnemyData : ScriptableObject
     [Header("値を大きくすると、徘徊時に、ふらつきが大きくなります")]
     public float wanderJitter;
 
+    //パスフォローのルート移動で使うノードリスト
+    [Header("P巡回時のルートです")]
+    public SO_Nodes route;
+
 
     //ステアリング優先度
     [Header("ステアリング優先度\n基本初期値で動くと思われる")]
@@ -61,4 +68,8 @@ public class SO_EnemyData : ScriptableObject
     //視界距離
     [Header("見える距離")]
     public float sensorLen;
+
+    //RVOで使う自身の大きさ
+    [Header("RVOでの大きさなので、当り判定をすっぽり包む大きさにしてください")]
+    public float rvoRadius;
 }

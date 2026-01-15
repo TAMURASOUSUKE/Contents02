@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class EnemyBase<T> : MonoBehaviour
+public class EnemyBase<T> : MonoBehaviour,IRvoObj
     where T : EnemyBlackBoardBase
 {
     //エネミーの初期値
@@ -29,5 +29,13 @@ public class EnemyBase<T> : MonoBehaviour
     public Vector3 GetVel()
     {
         return bb.vel;
+    }
+    public Vector3 GetPos()
+    {
+        return bb.pos;
+    }
+    public float GetRvoRadius()
+    {
+        return bb.rvoRadius;
     }
 }

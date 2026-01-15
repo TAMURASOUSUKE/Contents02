@@ -21,10 +21,11 @@ public class SO_FieldData : ScriptableObject
     [Header("パターンの定義")]
     public List<MapPattern> patterns;
 
+    [Header("固定配置リスト(座標とIDを指定する)")]
+    public List<FixedSpawnRule> fixedRules;
+
     [Header("ランダム生成のルール(サイズが大きいものから入れてください)")]
     public List<RandomSpawnRule> spawnRules;
-
-
 
     // ==============================以下はクラス定義やヘルパー関数==========================================
 
@@ -42,6 +43,20 @@ public class SO_FieldData : ScriptableObject
         public GameObject[] partsHigh; // それぞれのハイモデル
         [Header("パターンを構成する各ローモデル")]
         public GameObject[] partsLow; // それぞれのローモデル
+        [Header("A*計算用のコスト(複雑な地形ならコストを重くして下さい)")]
+        public int cost;
+    }
+
+    /// <summary>
+    /// 指定して置きたいマップパターンとその位置を定義する
+    /// </summary>
+    [System.Serializable]
+    public class FixedSpawnRule
+    {
+        [Header("置きたい場所")]
+        public Vector2Int position;
+        [Header("配置するパターンのID(patternsリストにあるIDを入力)")]
+        public string patternID;
     }
 
 
@@ -58,7 +73,9 @@ public class SO_FieldData : ScriptableObject
         [Header("生成を行う際の最大試行回数")]
         public int maxAttempts = 100; // 生成を何回まで試行するのか
         [Header("このルールで配置されたオブジェクトどうしの最低距離(0なら制限なし)")]
-        public float minDistance = 0.0f; // 生成の際の距離制限
+        public float minGenerateDistance = 0.0f; // 生成の際の距離制限
+        [Header("離したいオブジェクトの距離(主にプレイヤー)")]
+        public float minIsolationDistance = 0.0f;
     }
 
     /// <summary>

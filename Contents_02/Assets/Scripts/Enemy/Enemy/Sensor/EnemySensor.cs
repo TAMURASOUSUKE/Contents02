@@ -33,7 +33,7 @@ public class EnemySensor : MonoBehaviour
                 }
             }
             //エネミーならRVOリストに追加。
-            if (other.TryGetComponent<EnemyBase<EnemyBlackBoardBase>>(out var enemy))
+            if (other.TryGetComponent<IRvoObj>(out var enemy))
             {
                 //リストにいないなら
                 if (bb.rvoList.Contains(enemy) == false)
@@ -43,7 +43,7 @@ public class EnemySensor : MonoBehaviour
             }
         }
         //エネミーが角度外に出たなら、リストから外す
-        else if(other.TryGetComponent<EnemyBase<EnemyBlackBoardBase>>(out var enemy))
+        else if(other.TryGetComponent<IRvoObj>(out var enemy))
         {
             //リスト内にあるなら
             if (bb.rvoList.Contains(enemy))
@@ -61,7 +61,7 @@ public class EnemySensor : MonoBehaviour
             bb.target = null;
         }
         //センサー外にエネミーが出たなら
-        if (other.TryGetComponent<EnemyBase<EnemyBlackBoardBase>>(out var enemy))
+        if (other.TryGetComponent<IRvoObj>(out var enemy))
         {
             //リスト内にあるなら
             if (bb.rvoList.Contains(enemy))
