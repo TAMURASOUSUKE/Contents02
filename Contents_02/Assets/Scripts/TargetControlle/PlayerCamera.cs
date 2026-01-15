@@ -8,63 +8,84 @@ public class PlayerCamera : MonoBehaviour
     [SerializeField] CinemachineCamera lockOnCamera;
     [SerializeField] Transform playerTransform; // プレイヤーのTransform
     [SerializeField] CinemachineOrbitalFollow freeLookOrbital;
-
-    // 内部で作る「カメラ用回転軸」
-    private GameObject lockOnPivot;
+    [SerializeField] CinemachineOrbitalFollow lockOnOrbital;
+    [SerializeField] float cameraOffSet = 40.0f;
 
     readonly int LockOnCameraActivePriority = 11;
     readonly int LockOnCameraInactivePriority = 0;
 
-    private void Start()
-    {
-        // ピボット用の空オブジェクトを動的に生成
-        lockOnPivot = new GameObject("LockOnCameraPivot");
-        // 最初はプレイヤーと同じ場所に置いておく
-        lockOnPivot.transform.position = playerTransform.position;
-        lockOnPivot.transform.rotation = playerTransform.rotation;
-    }
-
     private void LateUpdate()
     {
-        // ピボットは常にプレイヤーの座標に同期させる
-        if (lockOnPivot != null && playerTransform != null)
+        if(lockOnCamera.Priority == LockOnCameraActivePriority && lockOnCamera.LookAt != null)
         {
-            lockOnPivot.transform.position = playerTransform.position;
-
-            // ロックオン中は、ピボットを「敵の方向」に向ける
-            if (lockOnCamera.Priority == LockOnCameraActivePriority && lockOnCamera.LookAt != null)
-            {
-                Transform enemy = lockOnCamera.LookAt;
-
-                // 敵への方向ベクトル（高さYは無視して水平回転のみにする）
-                Vector3 dirToEnemy = enemy.position - playerTransform.position;
-                dirToEnemy.y = 0; // 高低差でカメラが地面に潜るのを防ぐ
-
-                if (dirToEnemy != Vector3.zero)
-                {
-                    // ピボットを回転させる
-                    lockOnPivot.transform.rotation = Quaternion.LookRotation(dirToEnemy);
-                }
-            }
+            UpdateLockOnOrbitalPosition();
         }
 
     }
 
     public void ResetFreeLookCamera()
     {
-        // 任意の実装
+        if(freeLookCamera == null || playerTransform == null) return;
+
+        // プレイヤーのY軸回転を取得する
+        float playerAngleY = playerTransform.rotation.eulerAngles.y;
+
+        // 補正する
+        float targetAngle = playerAngleY;
+
+        // 代入する
+        freeLookOrbital.HorizontalAxis.Value = targetAngle;
+        // 高さも補正する
+        freeLookOrbital.VerticalAxis.Value = 20;
+
+        // ダンピングを無視する
+        freeLookCamera.PreviousStateIsValid = false;
+
+    }
+
+    // 常に「敵 -> プレイヤー -> カメラ」の並びになるよう角度を更新し続ける
+    void UpdateLockOnOrbitalPosition()
+    {
+        if (lockOnOrbital == null || playerTransform == null) return;
+
+        Transform enemy = lockOnCamera.LookAt;
+        if(enemy == null) return;
+
+        // プレイヤーから敵へのベクトルを出す
+        Vector3 direction = enemy.position - playerTransform.position;
+
+        //　水平方向だけとりだす
+        Vector3 horizontalDirection = new Vector3(direction.x, 0, direction.z);
+
+        // 水平方向の距離が近すぎると計算せずに返す
+        if(horizontalDirection.magnitude < 1.0f)
+        {
+            return;
+        }
+
+        // それをもとに角度を出す
+        float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg;
+
+        // カメラの位置に補正を行いちょうどいい位置に持っていく
+        targetAngle += cameraOffSet;
+
+        // 現在のシネマシーンの角度を取得
+        float currentAngle = lockOnOrbital.HorizontalAxis.Value;
+        // 現在地から目的地への差分計算
+        float deltaAngle = Mathf.DeltaAngle(currentAngle, targetAngle);
+
+        float smoothT = Time.deltaTime * 5.0f;
+        // 毎フレームの更新
+        lockOnOrbital.HorizontalAxis.Value = Mathf.Lerp(currentAngle, currentAngle + deltaAngle, smoothT);
     }
 
     public void ActiveLockOnCamera(GameObject target)
     {
         lockOnCamera.Priority = LockOnCameraActivePriority;
 
-
-        // Follow（位置基準）はプレイヤーではなく「ピボット」にする
-        lockOnCamera.Follow = lockOnPivot.transform;
-
         // LookAt（注視点）は敵のまま
         lockOnCamera.LookAt = target.transform;
+        lockOnCamera.Follow = playerTransform;
     }
 
 
