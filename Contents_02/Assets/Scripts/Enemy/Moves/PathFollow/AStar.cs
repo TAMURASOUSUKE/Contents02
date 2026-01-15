@@ -1,8 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.Analytics;
-using UnityEngine.Rendering;
 
 public class AStar
 {
@@ -103,7 +101,7 @@ public class AStar
         return result.ToArray();
     }
 
-    static public Cell[] Calc(Cell _start, Cell _goal)
+    static public Cell[] Calc(Cell _start, Cell _goal, CreateField _field)
     {
         // 結果代入用
         List<Cell> result = new List<Cell>();
@@ -131,14 +129,23 @@ public class AStar
             foreach (Vector2Int dir in Cell.DIR_8)
             {
                 // 隣接セルの計算
+                Vector2Int nextPos = currentACell.cell.cellPos + dir;
+
+                // セル取得関数
                 Cell nextCell = new Cell
                     (
-                    currentACell.cell.pos + dir,
-                    0// コスト取得関数
+                    nextPos,
+                    0//_field.GetCost(nextPos)
                     );
 
                 // マップ外の場合スキップ
-                if(nextCell.pos.x < 0 || nextCell.pos.x > 31 || nextCell.pos.y < 0 || nextCell.pos.y > 31)//マップサイズ取得関数をのちに入れる
+                if (nextCell.pos.x < 0 || nextCell.pos.x > _field.GetWidthCount() || nextCell.pos.y < 0 || nextCell.pos.y > _field.GetDepthCount())
+                {
+                    continue;
+                }
+
+                // 移動不可マスの場合は、スキップ
+                if (nextCell.cost < 0)
                 {
                     continue;
                 }
@@ -154,14 +161,14 @@ public class AStar
                     );
 
                 //計算済みリストにあるか
-                if (closeCells.ContainsKey(nextCell.pos))
+                if (closeCells.ContainsKey(nextCell.cellPos))
                 {
                     continue;
                 }
 
                 //計算結果代入用リストにあるか
                 //あるなら
-                if (calcResults.TryGetValue(nextCell.pos, out ACell calcCell))
+                if (calcResults.TryGetValue(nextCell.cellPos, out ACell calcCell))
                 {
                     //スコアが既存のモノより軽いなら
                     if (calcCell.score > nextACell.score)
@@ -173,12 +180,12 @@ public class AStar
                 // ないなら
                 else
                 {
-                    calcResults.Add(nextCell.pos, nextACell);
+                    calcResults.Add(nextCell.cellPos, nextACell);
                 }
             }
 
             //計算が終わったので、クローズリストに追加
-            closeCells.Add(currentACell.cell.pos, currentACell);
+            closeCells.Add(currentACell.cell.cellPos, currentACell);
             //次の親セルの決定
             //最小スコアの探索
             ACell min = calcResults.First().Value;
@@ -195,7 +202,7 @@ public class AStar
         }
 
         //追加されるノード
-        ACell addACell = calcResults[_goal.pos];
+        ACell addACell = calcResults[_goal.cellPos];
         //スタート地点は親がnullなのでそこまで。
         while (addACell.parent != null)
         {
@@ -221,8 +228,8 @@ public class AStar
     /// </returns>
     static private float OctileDist(Cell a, Cell b)
     {
-        int dx = Mathf.Abs(a.pos.x - b.pos.x);
-        int dy = Mathf.Abs(a.pos.y - b.pos.y);
+        int dx = Mathf.Abs(a.cellPos.x - b.cellPos.x);
+        int dy = Mathf.Abs(a.cellPos.y - b.cellPos.y);
 
         int min = Mathf.Min(dx, dy);
         int max = Mathf.Max(dx, dy);
