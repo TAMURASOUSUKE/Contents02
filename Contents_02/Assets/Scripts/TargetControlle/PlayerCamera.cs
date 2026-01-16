@@ -1,5 +1,6 @@
 using UnityEngine;
 using Unity.Cinemachine;
+using UnityEngine.Rendering;
 
 public class PlayerCamera : MonoBehaviour
 {
@@ -10,7 +11,11 @@ public class PlayerCamera : MonoBehaviour
     [SerializeField] CinemachineOrbitalFollow freeLookOrbital;
     [SerializeField] CinemachineOrbitalFollow lockOnOrbital;
     [SerializeField] float cameraOffSet = 40.0f;
+    [SerializeField] float normalFOV = 60.0f;
+    [SerializeField] float speedUpFOV = 80.0f;
 
+
+    float curentFOV = 60.0f;
     readonly int LockOnCameraActivePriority = 11;
     readonly int LockOnCameraInactivePriority = 0;
 
@@ -37,9 +42,6 @@ public class PlayerCamera : MonoBehaviour
         freeLookOrbital.HorizontalAxis.Value = targetAngle;
         // 高さも補正する
         freeLookOrbital.VerticalAxis.Value = 20;
-
-        // ダンピングを無視する
-        freeLookCamera.PreviousStateIsValid = false;
 
     }
 
@@ -134,5 +136,56 @@ public class PlayerCamera : MonoBehaviour
     public Transform GetLookAtTransform()
     {
         return lockOnCamera.LookAt;
+    }
+
+
+    // FOV制御
+
+    public void SpeedUPFOV()
+    {
+        // すでにスピードアップ状態のFOVなら計算しない
+        if (curentFOV == speedUpFOV) return;
+
+        curentFOV = Mathf.Lerp(curentFOV, speedUpFOV, Time.deltaTime * 5.0f);
+
+        // 目標値ぎりぎりに来たら値を合わせる
+        if(Mathf.Abs(curentFOV - speedUpFOV) < 0.01f)
+        {
+            curentFOV = speedUpFOV;
+        }
+
+        ApplyFOVCamera(freeLookCamera);
+        ApplyFOVCamera(lockOnCamera);
+    }
+
+    public void ResetFOV()
+    {
+        if (curentFOV == normalFOV) return; // すでに通常状態なら計算しない
+
+        curentFOV = Mathf.Lerp(curentFOV, normalFOV, Time.deltaTime * 5.0f);
+
+        // 目標値ぎりぎりに来たら値を合わせる
+        if (Mathf.Abs(curentFOV - normalFOV) < 0.01f)
+        {
+            curentFOV = normalFOV;
+        }
+
+        ApplyFOVCamera(freeLookCamera);
+        ApplyFOVCamera(lockOnCamera);
+    }
+
+    void ApplyFOVCamera(CinemachineCamera cinemachineCamera)
+    {
+        if(cinemachineCamera != null)
+        {
+            var lens = cinemachineCamera.Lens;
+            // 値が違うときだけ書き込む
+            if(Mathf.Abs(lens.FieldOfView - curentFOV) > 0.001f)
+            {
+                lens.FieldOfView = curentFOV;
+                cinemachineCamera.Lens = lens;
+            }
+
+        }
     }
 }

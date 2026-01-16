@@ -11,6 +11,8 @@ using UnityEngine.EventSystems;
 
 public class GameSceneManager : SceneManagerBase
 {
+    [Header("UIマネージャー")]
+    [SerializeField] SkillUIManager skillUIManager;
     [Header("シーン遷移")]
     [SerializeField] Image image;
     [Header("ポーズ画面")]
@@ -43,9 +45,13 @@ public class GameSceneManager : SceneManagerBase
     }
 
     // 最初にフェードアウトさせる
-    private void Start()
+    private IEnumerator Start()
     {
-        StartCoroutine(StartSceneFade(fadeTime, true, image , ChangeMaterialValue));
+        skillUIManager.OffObject();
+
+        yield return StartCoroutine(StartSceneFade(fadeTime, true, image , ChangeMaterialValue));
+
+        skillUIManager.ActiveObjet();
     }
 
     void Update()
@@ -55,6 +61,8 @@ public class GameSceneManager : SceneManagerBase
         // 条件が作れるまでボタンでクリアシーンに飛ぶようにしておく
         if (actions.UI.Next.WasPressedThisFrame())
         {
+            skillUIManager.OffObject();
+
             StartCoroutine(TransitionSequence(SceneState.GameClear, image));
         }
 
@@ -98,6 +106,7 @@ public class GameSceneManager : SceneManagerBase
     IEnumerator SetPause(bool isOut)
     {
         isProcessing = true; // フェードが始まったらtrue
+        skillUIManager.OffObject();
 
         if (!isOut)
         {
@@ -129,6 +138,8 @@ public class GameSceneManager : SceneManagerBase
             {
                 quitButtonImage[i].gameObject.SetActive(false); // ポーズ状態の解除なのでボタンも消す 
             }
+
+            skillUIManager.ActiveObjet();
 
             EventSystem.current.SetSelectedGameObject(null); // 選択状態を解除する
             currentRePauseTime = rePauseTime; // ポーズ連打防止のための時間をセットする
