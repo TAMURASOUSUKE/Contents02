@@ -15,7 +15,7 @@ public class Node
     /// <summary>
     /// ID
     /// </summary>
-    public int id;
+    public string id = null;
     /// <summary>
     /// ノードの位置
     /// </summary>
@@ -23,31 +23,28 @@ public class Node
     /// <summary>
     /// 移動できるノードリスト
     /// </summary>
-    public List<Node> nextNodes;
+    public List<string> nextNodeIds = new List<string>();
 
-    public Node(int _id, Vector3 _pos)
+    public Node(string _id, Vector3 _pos)
     {
         this.role = NodeRole.NORMAL;
         this.exitDir = NodeExitDir.NONE;
         this.id = _id;
         this.pos = _pos;
-        nextNodes = new List<Node>();
     }
-    public Node(NodeRole _role, int _id, Vector3 _pos)
+    public Node(NodeRole _role, string _id, Vector3 _pos)
     {
         this.role = _role;
         this.exitDir = NodeExitDir.NONE;
         this.id = _id;
         this.pos = _pos;
-        nextNodes = new List<Node>();
     }
-    public Node(NodeRole _role, NodeExitDir _exitDir, int _id, Vector3 _pos)
+    public Node(NodeRole _role, NodeExitDir _exitDir, string _id, Vector3 _pos)
     {
         this.role = _role;
         this.exitDir = NodeExitDir.NONE;
         this.exitDir = _exitDir;
         this.id = _id;
         this.pos = _pos;
-        nextNodes = new List<Node>();
     }
 }
