@@ -502,4 +502,16 @@ public class CreateField : MonoBehaviour
         }
         return null; // ”ÍˆÍŠO‚È‚Ç‚Ìê‡‚Ínull ‚ð•Ô‚·
     }
+
+    public Vector3 GetWorldPos(Vector2Int position)
+    {
+        if (position.x >= 1 && position.x < fieldData.width - 1 && position.y >= 1 && position.y < fieldData.depth - 1)
+        {
+            float x = position.x * generationInterval;
+            float y = position.y * generationInterval;
+
+            return new Vector3(x, 0.0f, y);
+        }
+        return Vector3.zero; // ”ÍˆÍŠO‚È‚Ç‚Ìê‡‚Ínull ‚ð•Ô‚·
+    }
 }
