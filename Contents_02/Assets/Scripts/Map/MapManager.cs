@@ -105,14 +105,46 @@ public class MapManager : MonoBehaviour
     /// 探すセル
     /// </param>
     /// <returns></returns>
-    public Node GetNearNode(Vector3 _pos,Cell _nowCell)
+    public Node GetNearNode(Vector3 _pos,Cell _targetCell)
     {
-        SO_Nodes so = _nowCell.so_nodes;
+        SO_Nodes so = _targetCell.so_nodes;
         // 一番近いノードが入る
         Node nearNode = so.nodes[0];
         // 一番近いノードの距離
         float nearDist = Vector3.Distance(_pos, nearNode.pos);
-        for (int i = 1; i < _nowCell.so_nodes.nodes.Count; i++)
+        for (int i = 1; i < _targetCell.so_nodes.nodes.Count; i++)
+        {
+            Node node = so.nodes[i];
+            // 距離
+            float dist = Vector3.Distance(_pos, node.pos);
+            // 一番近いノードの距離の更新
+            if (nearDist > dist)
+            {
+                nearNode = node;
+                nearDist = dist;
+            }
+        }
+
+        return nearNode;
+    }
+
+    /// <summary>
+    /// 特定のセル内で、一番近いノードを取得
+    /// </summary>
+    /// <param name="_pos">
+    /// ワールド座標
+    /// </param>
+    /// <returns></returns>
+    public Node GetNearNode(Vector3 _pos)
+    {
+        Cell currentCell = GetCell(_pos);
+
+        SO_Nodes so = currentCell.so_nodes;
+        // 一番近いノードが入る
+        Node nearNode = so.nodes[0];
+        // 一番近いノードの距離
+        float nearDist = Vector3.Distance(_pos, nearNode.pos);
+        for (int i = 1; i < currentCell.so_nodes.nodes.Count; i++)
         {
             Node node = so.nodes[i];
             // 距離
@@ -135,7 +167,7 @@ public class MapManager : MonoBehaviour
     /// 現在地
     /// </param>
     /// <returns></returns>
-    Cell GetCell(Vector3 _pos)
+    public Cell GetCell(Vector3 _pos)
     {
         int wide = Mathf.FloorToInt((_pos.x / SIDE_LEN) - SIDE_LEN / 2.0f);
         int depth = Mathf.FloorToInt((_pos.y / SIDE_LEN) - SIDE_LEN / 2.0f);

@@ -26,23 +26,21 @@ public class PathFollow
             //目標地点との距離
             float targetDist = Vector3.Distance(_bb.trans.position, _bb.pos);
 
-            //次のノードとの距離
-            //Node current = MapManager.Instance.GetNearNode(_bb.pos);
-            //Node goal = MapManager.Instance.GetNearNode(_bb.target.position);
+            // ターゲットに近づくノードの探索
+            Node nextNode = MapManager.Instance.GetShortestPathNextNode(_bb.pos, _bb.target.position);
 
-            //Node nextNode = MapManager.Instance.GetShortestPathNextNode(current, goal);
+            // ノードとの距離
+            float nextNodeDist = Vector3.Distance(_bb.trans.position, nextNode.pos);
 
-            //float nextNodeDist = Vector3.Distance(_bb.trans.position, nextNode.pos);
-
-            //距離が近いほうを移動目標に入れる
-            //if (nextNodeDist < targetDist)
-            //{
-            //    _bb.moveTarget = nextNode.pos;
-            //}
-            //else
-            //{
-            //    _bb.moveTarget = _bb.target.position;
-            //}
+            // 距離が近いほうを移動目標に入れる
+            if (nextNodeDist < targetDist)
+            {
+                _bb.moveTarget = nextNode.pos;
+            }
+            else
+            {
+                _bb.moveTarget = _bb.target.position;
+            }
         }
     }
 
