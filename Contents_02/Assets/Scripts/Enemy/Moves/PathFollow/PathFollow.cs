@@ -56,7 +56,6 @@ public class PathFollow
         {
             // 現在のノードからけるノードリスト
             List<string> nextNodes = next.nextNodeIds;
-            Debug.Log(nextNodes.Count);
             // 現在の目標ノードから、移動できるノードのインデックスをランダムに選ぶ
             int index = Random.Range(0, nextNodes.Count);
             // 移動目標変更
