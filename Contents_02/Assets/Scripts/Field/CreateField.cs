@@ -493,17 +493,25 @@ public class CreateField : MonoBehaviour
         return fieldData.depth;
     }
 
-    /// <summary>
-    /// 指定されたグリッド座標からコストを取得する
-    /// </summary>
-    /// <param name="position">グリッド座標</param>
-    /// <returns>コスト(範囲外等なんらかの理由で範囲外の場合は-1を返す)</returns>
-    public int GetCost(Vector2Int position)
+
+    public Cell GetCost(Vector2Int position)
     {
         if(position.x >= 1 && position.x < fieldData.width - 1 && position.y >= 1 && position.y < fieldData.depth - 1)
         {
-            return costMap[position.x, position.y];
+            return new Cell(position, costMap[position.x, position.y]);
         }
-        return -1; // 範囲外などの場合は-1を返す
+        return null; // 範囲外などの場合はnull を返す
+    }
+
+    public Vector3 GetWorldPos(Vector2Int position)
+    {
+        if (position.x >= 1 && position.x < fieldData.width - 1 && position.y >= 1 && position.y < fieldData.depth - 1)
+        {
+            float x = position.x * generationInterval;
+            float y = position.y * generationInterval;
+
+            return new Vector3(x, 0.0f, y);
+        }
+        return Vector3.zero; // 範囲外などの場合はnull を返す
     }
 }

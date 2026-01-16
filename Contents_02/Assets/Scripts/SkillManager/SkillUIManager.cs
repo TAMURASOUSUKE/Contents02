@@ -15,4 +15,23 @@ public class SkillUIManager : MonoBehaviour
             skillUI.OnChangedSkill(skillContext_);
         }
     }
+
+    // ポーズやフェード中などの時にスキルのUI等を隠す
+    public void OffObject()
+    {
+        foreach(var skill in skillUIs)
+        {
+            skill.gameObject.SetActive(false);
+        }
+    }
+
+
+    // すべてのUIを見えるようにする
+    public void ActiveObjet()
+    {
+        foreach (var skill in skillUIs)
+        {
+            skill.gameObject.SetActive(true);
+        }
+    }
 }

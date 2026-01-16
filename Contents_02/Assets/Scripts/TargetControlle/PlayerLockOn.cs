@@ -87,7 +87,7 @@ public class PlayerLockOn : MonoBehaviour
     // カメラリセット処理
     void InputResetCamera()
     {
-        if (inputActions.Player.CameraReset.IsPressed())
+        if (inputActions.Player.CameraReset.WasPressedThisFrame())
         {
             playerCamera.ResetFreeLookCamera();
         }
