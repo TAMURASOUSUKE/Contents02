@@ -5,7 +5,7 @@ public class PathFollow
 {
     //ルート
     private SO_Nodes routeSo;
-    //ルートのインデックス
+    //ルートのノード
     private Node next;
     public PathFollow(SO_Nodes _routeSo)
     {
@@ -27,22 +27,22 @@ public class PathFollow
             float targetDist = Vector3.Distance(_bb.trans.position, _bb.pos);
 
             //次のノードとの距離
-            Node current = MapManager.Instance.GetNearNode(_bb.pos);
-            Node goal = MapManager.Instance.GetNearNode(_bb.target.position);
+            //Node current = MapManager.Instance.GetNearNode(_bb.pos);
+            //Node goal = MapManager.Instance.GetNearNode(_bb.target.position);
 
-            Node nextNode = MapManager.Instance.GetShortestPathNextNode(current, goal);
+            //Node nextNode = MapManager.Instance.GetShortestPathNextNode(current, goal);
 
-            float nextNodeDist = Vector3.Distance(_bb.trans.position, nextNode.pos);
+            //float nextNodeDist = Vector3.Distance(_bb.trans.position, nextNode.pos);
 
             //距離が近いほうを移動目標に入れる
-            if (nextNodeDist < targetDist)
-            {
-                _bb.moveTarget = nextNode.pos;
-            }
-            else
-            {
-                _bb.moveTarget = _bb.target.position;
-            }
+            //if (nextNodeDist < targetDist)
+            //{
+            //    _bb.moveTarget = nextNode.pos;
+            //}
+            //else
+            //{
+            //    _bb.moveTarget = _bb.target.position;
+            //}
         }
     }
 
@@ -56,16 +56,14 @@ public class PathFollow
     {
         if(IsCompleteMove(_bb))
         {
-            if(next.nextNodes.Count == 0)
-            {
-                Debug.Log(next.id);
-            }
             // 現在のノードからけるノードリスト
-            List<Node> nextNodes = next.nextNodes;
+            List<string> nextNodes = next.nextNodeIds;
+            Debug.Log(nextNodes.Count);
             // 現在の目標ノードから、移動できるノードのインデックスをランダムに選ぶ
             int index = Random.Range(0, nextNodes.Count);
             // 移動目標変更
-            next = nextNodes[index];
+            string nextId = nextNodes[index];
+            next = routeSo.nodes.Find(n => n.id == nextId);
             _bb.moveTarget = next.pos;
         }
     }

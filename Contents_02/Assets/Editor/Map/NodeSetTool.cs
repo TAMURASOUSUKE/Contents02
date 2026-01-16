@@ -149,7 +149,7 @@ public class NodeSetTool: EditorWindow
             // ノード作成
             // ノードIDは0から、追加された順
             // 位置はオブジェクトの相対座標で取る
-            Node node = new Node(so.nodes.Count, hitinfo.point - rootPrefab.transform.position);
+            Node node = new Node(System.Guid.NewGuid().ToString(), hitinfo.point - rootPrefab.transform.position);
             // 生成ノードの役割が出口なら、追加情報
             if (plantNodeRole == NodeRole.EXIT)
             {
@@ -194,18 +194,12 @@ public class NodeSetTool: EditorWindow
             Undo.RecordObject(so, "delete node");
             // SOのリストから除外
             so.nodes.Remove(select);
-            // IDの修正
-            for(int id = 0; id < so.nodes.Count; id++)
-            {
-                if(so.nodes[id].id != id)
-                {
-                    so.nodes[id].id = id;
-                }
-            }
+            
             // すべてのノードの移動できるノードリストから除外
             foreach (Node node in so.nodes)
             {
-                node.nextNodes.Remove(select);
+                node.nextNodeIds.Remove(select.id);
+                node.nextNodeIds.RemoveAll(n => n == null);
             }
 
             // 選択されたノードをnullに戻す
@@ -222,13 +216,13 @@ public class NodeSetTool: EditorWindow
     /// <summary>
     /// ノード接続関数
     /// </summary>
-    /// <param name="node01_">
+    /// <param name="_node01">
     /// 一つ目のノード
     /// </param>
-    /// /// <param name="node02_">
+    /// /// <param name="_node02">
     /// 二つ目のノード
     /// </param>
-    void ConnecteNode(Node node01_, Node node02_)
+    void ConnecteNode(Node _node01, Node _node02)
     {
         // nullチェック
         if (so == null)
@@ -238,15 +232,15 @@ public class NodeSetTool: EditorWindow
 
         Undo.RecordObject(so, "connecte node");
         
-        // 移動できるノードリストにないなら変更
-        if (node01_.nextNodes.Contains(node02_) == false)
+        // 移動できるノードリストにないなら追加
+        if (_node01.nextNodeIds.Contains(_node02.id) == false)
         {
-            node01_.nextNodes.Add(node02_);
+            _node01.nextNodeIds.Add(_node02.id);
         }
 
-        if (node02_.nextNodes.Contains(node01_) == false)
+        if (_node02.nextNodeIds.Contains(_node01.id) == false)
         {
-            node02_.nextNodes.Add(node01_);
+            _node02.nextNodeIds.Add(_node01.id);
         }
 
         EditorUtility.SetDirty(so);
@@ -385,25 +379,27 @@ public class NodeSetTool: EditorWindow
         }
 
         // 描画済み関数
-        HashSet<(int, int)> drawnNodes = new HashSet<(int, int)>();
+        HashSet<(string, string)> drawnNodes = new HashSet<(string, string)>();
 
         // すべてのノード
         foreach(Node node in so.nodes)
         {
             // 移動できるノードリストが0より大きいなら
-            if(node.nextNodes.Count > 0)
+            if(node.nextNodeIds.Count > 0)
             {
-                foreach (Node next in node.nextNodes)
+                foreach (string nextId in node.nextNodeIds)
                 {
-                    int min = Mathf.Min(node.id , next.id);
-                    int max = Mathf.Max(node.id , next.id);
+                    string min = string.CompareOrdinal(node.id, nextId) < 0 ? node.id : nextId;
+                    string max = min == node.id ? nextId : node.id;
                     // 描画済みノードに追加できるかどうか
                     if (!drawnNodes.Add((min, max)))
                     {
                         continue;
                     }
 
-                    Handles.DrawLine(node.pos + rootPrefab.transform.position, next.pos + rootPrefab.transform.position);
+                    Node nextNode = so.nodes.Find(n => n.id == nextId);
+
+                    Handles.DrawLine(node.pos + rootPrefab.transform.position, nextNode.pos + rootPrefab.transform.position);
                 }
             }
         }

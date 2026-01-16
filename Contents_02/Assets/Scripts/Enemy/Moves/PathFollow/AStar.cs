@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class AStar
 {
-    static public Node[] Calc(Node _start, Node _goal)
+    static public Node[] Calc(Node _start, Node _goal, Dictionary<string, Node> _map)
     {
         // 結果代入用
         List<Node> result = new List<Node>();
@@ -19,39 +19,41 @@ public class AStar
             );
 
         // 仮計算結果
-        Dictionary<int, ANode> calcResults = new Dictionary<int, ANode>();
+        Dictionary<string, ANode> calcResults = new Dictionary<string, ANode>();
         // 計算済みノード(親ノードになったやつら)
-        Dictionary<int, ANode> closeNodes = new Dictionary<int, ANode>();
+        Dictionary<string, ANode> closeNodes = new Dictionary<string, ANode>();
         // 周囲計算
         while(currentANode.node.id != _goal.id)
         {
             // 隣接ノードの計算
-            foreach(Node next in currentANode.node.nextNodes)
+            foreach(string nextId in currentANode.node.nextNodeIds)
             {
-                // エラー防止
-                if (next.id == -1)
+                // nullチェック
+                if ( nextId == null)
                 {
                     continue;
                 }
+
+                Node nextNode = _map[nextId];
 
                 // 次のノードの計算
                 ANode nextANode =
                     new ANode
                     (
-                        next,
-                        currentANode.cost + Vector3.Distance(currentANode.node.pos, next.pos),
-                        Vector3.Distance(_goal.pos, next.pos)
+                        nextNode,
+                        currentANode.cost + Vector3.Distance(currentANode.node.pos, nextNode.pos),
+                        Vector3.Distance(_goal.pos, nextNode.pos)
                     );
 
                 // 計算済みリストにあるか
-                if(closeNodes.ContainsKey(next.id))
+                if(closeNodes.ContainsKey(nextId))
                 {
                     continue;
                 }
 
                 // 計算結果代入用リストにあるか
                 // あるなら
-                if (calcResults.TryGetValue(next.id, out ANode calcNode))
+                if (calcResults.TryGetValue(nextId, out ANode calcNode))
                 {
                     // スコアが既存のモノより軽いなら
                     if (calcNode.score > nextANode.score)
@@ -63,7 +65,7 @@ public class AStar
                 // ないなら
                 else
                 {
-                    calcResults.Add(next.id, nextANode);
+                    calcResults.Add(nextId, nextANode);
                 }
             }
 

@@ -20,14 +20,14 @@ public class Cell
     /// <summary>
     /// セル内にある、ノード
     /// </summary>
-    public SO_Nodes nodes;
+    public SO_Nodes so_nodes;
 
     public Cell(Vector2Int _cellPos, int _cost)
     {
         this.cellPos = _cellPos;
         this.pos = Vector3.zero;
         this.cost = _cost;
-        this.nodes = null;
+        this.so_nodes = null;
     }
 
     //オクタイル用8方向定数
