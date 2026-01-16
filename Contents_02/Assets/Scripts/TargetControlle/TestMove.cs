@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Assertions.Must;
 using UnityEngine.InputSystem;
 
 public class PlayerMovementTest : MonoBehaviour, ISkillReceiver
@@ -12,6 +13,7 @@ public class PlayerMovementTest : MonoBehaviour, ISkillReceiver
     [SerializeField] float speedUpTime = 10.0f;
     [SerializeField] SkillManager skillManager;
     [SerializeField] PlayerLockOn lockOn;
+    [SerializeField] PlayerCamera playerCamera; // スピード変更時のカメラ制御を行う
 
     StatusController statusController;
     CharacterController controller;
@@ -19,6 +21,7 @@ public class PlayerMovementTest : MonoBehaviour, ISkillReceiver
     Vector3 verticalVelocity; // 垂直方向（重力）の速度
     float turnSmoothVelocity;
     bool isGrounded;
+    bool selectButtonReturnFlag = true; // スキル選択ボタンの連打防止フラグ
 
     private void Awake()
     {
@@ -41,13 +44,44 @@ public class PlayerMovementTest : MonoBehaviour, ISkillReceiver
 
         // 3. 最終的な移動（合成して1回だけMoveする）
         // (横移動 * スピード) + (縦移動)
-        Vector3 finalMovement = (moveVector * (statusController.Has(SkillMasks.SpeedUp) ? moveSpeed * 2.0f : moveSpeed)) + verticalVelocity;
+        Vector3 finalMovement = (moveVector * (statusController.Has(SkillMasks.SpeedUp) ? moveSpeed * 10.0f : moveSpeed)) + verticalVelocity;
         controller.Move(finalMovement * Time.deltaTime);
 
+        float inputSelectValue = inputActions.Player.SelectCommand.ReadValue<float>(); // 入力を受け取る 
+        // デバイスによって入力方法を分ける
+        bool isMouseSelection = false;
+        if (inputActions.Player.SelectCommand.activeControl != null)
+        {
+            isMouseSelection = inputActions.Player.SelectCommand.activeControl.device is Mouse;
+        }
+
+        // 入力がある場合
+        if(Mathf.Abs(inputSelectValue) > 0.1f)
+        {
+            // マウスの場合
+            if (isMouseSelection)
+            {
+                skillManager.MoveSelection((int)inputSelectValue);
+            }
+            // パッドの場合
+            else
+            {
+                // 連続入力されていなければ
+                if (selectButtonReturnFlag)
+                {
+                    skillManager.MoveSelection((int)inputSelectValue);
+                    selectButtonReturnFlag = false; // ロックをかける
+                }
+            }
+        }
+        // 入力がない場合は
+        else
+        {
+            selectButtonReturnFlag = true; // ロック解除
+        }
 
 
-        skillManager.MoveSelection((int)inputActions.Player.SelectCommand.ReadValue<float>());
-
+        // 発動したら通知を送る
         if (inputActions.Player.InteractCommand.WasPressedThisFrame())
         {
             SkillContext skillContext;
@@ -61,17 +95,19 @@ public class PlayerMovementTest : MonoBehaviour, ISkillReceiver
             {
                 skillContext.hitPosition = this.gameObject.transform.position;
             }
-                skillContext.condition = skillManager.GetCurrentSkill();
+            skillContext.condition = skillManager.GetCurrentSkill();
             skillManager.InputSkillContext(skillContext);
         }
 
         if (statusController.Has(SkillMasks.SpeedUp))
         {
             Debug.Log("スピードアップ中");
+            playerCamera.SpeedUPFOV();
         }
         else
         {
             Debug.Log("通常速度");
+            playerCamera.ResetFOV();
         }
     }
 
