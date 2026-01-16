@@ -5,8 +5,8 @@ using static UnityEditor.PlayerSettings;
 public class MapManager : MonoBehaviour
 {
     const float SIDE_LEN = 50.0f;
-    List<Node> mapNodes = new List<Node>();
-    Dictionary<Cell,Node> exitCells = new Dictionary<Cell,Node>();
+    Dictionary<int,Node> mapNodes = new Dictionary<int,Node>();
+    List<Node> exitNodes = new List<Node>();
 
     CreateField field;
 
@@ -29,15 +29,27 @@ public class MapManager : MonoBehaviour
         {
             for (int j = 0; j < field.GetDepthCount(); j++)
             {
-                Vector2Int pos = new Vector2Int(i, j);
+                Vector2Int cellPos = new Vector2Int(i, j);
                 // セル取得関数
-
+                Cell cell = field.GetCost(cellPos);
                 // 全セル内ノードをワールド座標に変換して保持。
-                // mapNodes.Add();
+                foreach(Node node in cell.so_nodes.nodes)
+                {
+                    Node worldNode = new Node(mapNodes.Count, cell.pos + node.pos);
+                    mapNodes[mapNodes.Count] = worldNode;
 
-                // セル内の出入り口ノードを辞書に登録
-                
+                    // セル内の出入り口ノードを登録
+                    if(node.role == NodeRole.EXIT)
+                    {
+                        exitNodes.Add(worldNode);
+                    }
+                }
                 // 接続ができそうなノードがあったら接続
+                foreach(Node node in exitNodes)
+                {
+                    //Cell checkCell = node + node.exitDir;
+                    //if ()
+                }
             }
         }
     }
@@ -56,7 +68,7 @@ public class MapManager : MonoBehaviour
         Node node = GetNextCellGoNode(currentCell, cells[1]);
 
         // ノードのA*
-        // Node[] nodes = AStar.Calc(GetNearNode(_current, currentCell), GetNearNode(_goal, goalCell));
+        Node[] nodes = AStar.Calc(GetNearNode(_current, currentCell), GetNearNode(_goal, goalCell), mapNodes);
 
         // 最初には、現在地が入っているのでインデックスが1
         return node;

@@ -55,11 +55,11 @@ public class PathFollow
         if(IsCompleteMove(_bb))
         {
             // 現在のノードからけるノードリスト
-            List<string> nextNodes = next.nextNodeIds;
+            List<int> nextNodes = next.nextNodeIds;
             // 現在の目標ノードから、移動できるノードのインデックスをランダムに選ぶ
             int index = Random.Range(0, nextNodes.Count);
             // 移動目標変更
-            string nextId = nextNodes[index];
+            int nextId = nextNodes[index];
             next = routeSo.nodes.Find(n => n.id == nextId);
             _bb.moveTarget = next.pos;
         }

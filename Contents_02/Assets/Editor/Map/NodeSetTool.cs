@@ -149,7 +149,7 @@ public class NodeSetTool: EditorWindow
             // ノード作成
             // ノードIDは0から、追加された順
             // 位置はオブジェクトの相対座標で取る
-            Node node = new Node(System.Guid.NewGuid().ToString(), hitinfo.point - rootPrefab.transform.position);
+            Node node = new Node(so.nodes.Count, hitinfo.point - rootPrefab.transform.position);
             // 生成ノードの役割が出口なら、追加情報
             if (plantNodeRole == NodeRole.EXIT)
             {
@@ -379,7 +379,7 @@ public class NodeSetTool: EditorWindow
         }
 
         // 描画済み関数
-        HashSet<(string, string)> drawnNodes = new HashSet<(string, string)>();
+        HashSet<(int, int)> drawnNodes = new HashSet<(int, int)>();
 
         // すべてのノード
         foreach(Node node in so.nodes)
@@ -387,10 +387,10 @@ public class NodeSetTool: EditorWindow
             // 移動できるノードリストが0より大きいなら
             if(node.nextNodeIds.Count > 0)
             {
-                foreach (string nextId in node.nextNodeIds)
+                foreach (int nextId in node.nextNodeIds)
                 {
-                    string min = string.CompareOrdinal(node.id, nextId) < 0 ? node.id : nextId;
-                    string max = min == node.id ? nextId : node.id;
+                    int min = node.id < nextId ? node.id : nextId;
+                    int max = min == node.id ? nextId : node.id;
                     // 描画済みノードに追加できるかどうか
                     if (!drawnNodes.Add((min, max)))
                     {
