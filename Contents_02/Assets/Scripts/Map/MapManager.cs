@@ -6,7 +6,7 @@ public class MapManager : MonoBehaviour
 {
     const float SIDE_LEN = 50.0f;
     Dictionary<int,Node> mapNodes = new Dictionary<int,Node>();
-    List<Node> exitNodes = new List<Node>();
+    Dictionary<Node, Cell> exitNodes = new Dictionary<Node, Cell>();
 
     CreateField field;
 
@@ -41,14 +41,14 @@ public class MapManager : MonoBehaviour
                     // セル内の出入り口ノードを登録
                     if(node.role == NodeRole.EXIT)
                     {
-                        exitNodes.Add(worldNode);
+                        exitNodes[worldNode] = cell;
                     }
                 }
                 // 接続ができそうなノードがあったら接続
-                foreach(Node node in exitNodes)
+                foreach(Node node in exitNodes.Keys)
                 {
-                    //Cell checkCell = node + node.exitDir;
-                    //if ()
+                    Vector2Int checkCell = NodeExitDirUtil.GetNeighborCell(exitNodes[node].cellPos, node.exitDir);
+                    //if()
                 }
             }
         }
