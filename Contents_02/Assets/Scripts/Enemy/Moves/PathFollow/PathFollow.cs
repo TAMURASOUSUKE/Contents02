@@ -26,23 +26,21 @@ public class PathFollow
             //目標地点との距離
             float targetDist = Vector3.Distance(_bb.trans.position, _bb.pos);
 
-            //次のノードとの距離
-            //Node current = MapManager.Instance.GetNearNode(_bb.pos);
-            //Node goal = MapManager.Instance.GetNearNode(_bb.target.position);
+            // ターゲットに近づくノードの探索
+            Node nextNode = MapManager.Instance.GetShortestPathNextNode(_bb.pos, _bb.target.position);
 
-            //Node nextNode = MapManager.Instance.GetShortestPathNextNode(current, goal);
+            // ノードとの距離
+            float nextNodeDist = Vector3.Distance(_bb.trans.position, nextNode.pos);
 
-            //float nextNodeDist = Vector3.Distance(_bb.trans.position, nextNode.pos);
-
-            //距離が近いほうを移動目標に入れる
-            //if (nextNodeDist < targetDist)
-            //{
-            //    _bb.moveTarget = nextNode.pos;
-            //}
-            //else
-            //{
-            //    _bb.moveTarget = _bb.target.position;
-            //}
+            // 距離が近いほうを移動目標に入れる
+            if (nextNodeDist < targetDist)
+            {
+                _bb.moveTarget = nextNode.pos;
+            }
+            else
+            {
+                _bb.moveTarget = _bb.target.position;
+            }
         }
     }
 
@@ -57,12 +55,11 @@ public class PathFollow
         if(IsCompleteMove(_bb))
         {
             // 現在のノードからけるノードリスト
-            List<string> nextNodes = next.nextNodeIds;
-            Debug.Log(nextNodes.Count);
+            List<int> nextNodes = next.nextNodeIds;
             // 現在の目標ノードから、移動できるノードのインデックスをランダムに選ぶ
             int index = Random.Range(0, nextNodes.Count);
             // 移動目標変更
-            string nextId = nextNodes[index];
+            int nextId = nextNodes[index];
             next = routeSo.nodes.Find(n => n.id == nextId);
             _bb.moveTarget = next.pos;
         }

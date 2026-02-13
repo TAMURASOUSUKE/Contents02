@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class AStar
 {
-    static public Node[] Calc(Node _start, Node _goal, Dictionary<string, Node> _map)
+    static public Node[] Calc(Node _start, Node _goal, Dictionary<int, Node> _map)
     {
         // 結果代入用
         List<Node> result = new List<Node>();
@@ -19,17 +19,17 @@ public class AStar
             );
 
         // 仮計算結果
-        Dictionary<string, ANode> calcResults = new Dictionary<string, ANode>();
+        Dictionary<int, ANode> calcResults = new Dictionary<int, ANode>();
         // 計算済みノード(親ノードになったやつら)
-        Dictionary<string, ANode> closeNodes = new Dictionary<string, ANode>();
+        Dictionary<int, ANode> closeNodes = new Dictionary<int, ANode>();
         // 周囲計算
         while(currentANode.node.id != _goal.id)
         {
             // 隣接ノードの計算
-            foreach(string nextId in currentANode.node.nextNodeIds)
+            foreach(int nextId in currentANode.node.nextNodeIds)
             {
                 // nullチェック
-                if ( nextId == null)
+                if ( nextId == -1)
                 {
                     continue;
                 }
@@ -134,11 +134,7 @@ public class AStar
                 Vector2Int nextPos = currentACell.cell.cellPos + dir;
 
                 // セル取得関数
-                Cell nextCell = new Cell
-                    (
-                    nextPos,
-                    0//_field.GetCost(nextPos)
-                    );
+                Cell nextCell = _field.GetCost(nextPos);
 
                 // マップ外の場合スキップ
                 if (nextCell.pos.x < 0 || nextCell.pos.x > _field.GetWidthCount() || nextCell.pos.y < 0 || nextCell.pos.y > _field.GetDepthCount())

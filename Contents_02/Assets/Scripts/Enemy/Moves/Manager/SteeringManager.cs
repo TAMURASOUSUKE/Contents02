@@ -20,9 +20,6 @@ public class SteeringManager
             vec += intent.SteeringCalc(_bb);
         }
 
-        //RVO計算
-        vec = RVO.AdjustVec(_bb, vec);
-
         //回避ステアリング計算
         foreach (var avoid in avoidSteerings)
         {

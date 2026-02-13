@@ -11,6 +11,8 @@ public class TestEnemyPatrolState:EnemyStateBase<TestEnemyBB>
         _bb.steeringManager.AddSteering(_bb.arrive, 1.0f);
         Vector3 vec = _bb.steeringManager.SteeringCalc(_bb);
 
+        //RVOŒvŽZ
+        RVO.AdjustVec(_bb);
 
         Debug.DrawRay(_bb.pos, _bb.trans.forward);
         Debug.DrawRay(_bb.pos, _bb.pos + vec, Color.gray);
