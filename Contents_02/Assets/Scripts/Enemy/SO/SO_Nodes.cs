@@ -5,4 +5,11 @@ using UnityEngine;
 public class SO_Nodes : ScriptableObject
 {
     public List<Node> nodes;
+
+}
+
+[CreateAssetMenu(fileName = "SO_NodesLibrary", menuName = "Scriptable Objects/SO_NodesLibrary")]
+public class SO_NodesLibrary : ScriptableObject
+{
+    public List<SO_Nodes> nodesLibrary;
 }
