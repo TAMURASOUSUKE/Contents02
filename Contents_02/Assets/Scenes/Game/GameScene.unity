@@ -1835,8 +1835,9 @@ MonoBehaviour:
   fieldData: {fileID: 11400000, guid: 6e6260a81c01b2b4582b67103a38686b, type: 2}
   playerTransform: {fileID: 372414563}
   disp01Distance: 300
-  disp02Distance: 1800
+  disp02Distance: 815
   heightFactorADJ: 0.1
+  fadeDistance: 40
   refreshFrame: 30
   generationInterval: 50
 --- !u!4 &1333633229
