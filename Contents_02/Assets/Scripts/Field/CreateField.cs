@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEditor.Analytics;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 
 
@@ -18,6 +19,8 @@ public class CreateField : MonoBehaviour
     [SerializeField] float disp02Distance = 4200.0f;
     [Header("プレイヤーが高い位置に行ったときに周囲がどのくらい見えるようになるかを調整する")]
     [SerializeField, Range(0.1f, 1.0f)] float heightFactorADJ = 0.1f;
+    [Header("フェードさせ始める距離")]
+    [SerializeField, Range(10.0f, 40.0f)] float fadeDistance;
     [Header("指定したフレーム数で全体の状態を更新し描画残しを防ぐ")]
     [Header("単位 : f(フレーム)")]
     [SerializeField] int refreshFrame = 30;
@@ -32,7 +35,7 @@ public class CreateField : MonoBehaviour
     Vector3[,] positionCache;
     Vector3 scaleCache = Vector3.one; // fieldDataから取り出したスケールをキャッシュする
     Vector2Int playerStartPosCache = Vector2Int.zero; // プレイヤーのスタート位置のキャッシュ(Vector2Int型に丸める)
-   
+
     // 前フレームの計算キャッシュ
     int prevCenterX = int.MinValue; // 前フレームの中心X
     int prevCenterZ = int.MinValue; // 前フレームの中心Z
@@ -43,6 +46,9 @@ public class CreateField : MonoBehaviour
     int fillerCost = 1;
     int[,] costMap; // コストをキャッシュする二次元配列
 
+    // フェードさせるためのマテリアル複製
+    static MaterialPropertyBlock propertyBlock;
+    readonly int propertyID = Shader.PropertyToID("_BaseColor"); // Shaderからこのプロパティ設定を読み取る
 
 
 
@@ -52,7 +58,7 @@ public class CreateField : MonoBehaviour
         // Random.InitState(12345);
 
 
-        if(fieldData == null)
+        if (fieldData == null)
         {
             Debug.LogError("FieldDataが設定されていません");
         }
@@ -79,8 +85,8 @@ public class CreateField : MonoBehaviour
         // 指定したフレーム間で全体を更新する
         if (Time.frameCount % refreshFrame == 0)
         {
-            FullRefresh();
-        }        
+            // FullRefresh();
+        }
     }
 
 
@@ -105,14 +111,14 @@ public class CreateField : MonoBehaviour
         costMap = new int[fieldData.width, fieldData.depth];
 
         // 最初に固定配置を置く
-        if(fieldData.fixedRules != null)
+        if (fieldData.fixedRules != null)
         {
             foreach (var rule in fieldData.fixedRules)
             {
                 // IDから必要なパターン情報を引っ張ってくる
                 var pattern = fieldData.GetMapPatternByID(rule.patternID);
 
-                if(pattern == null)
+                if (pattern == null)
                 {
                     Debug.LogWarning($"固定配置エラー : ID{rule.patternID}が見つかりません");
                 }
@@ -126,10 +132,10 @@ public class CreateField : MonoBehaviour
                 }
 
                 // 置こうとしている範囲がすでに置いた場所に重なっていないか若しくは壁に重なっていないかを判定する
-                if(CanPlace(rule.position, pattern.size, isOccupied))
+                if (CanPlace(rule.position, pattern.size, isOccupied))
                 {
                     // 分解して設置する
-                    PlacePattern(rule.position, pattern, isOccupied, fieldHighParent.transform, fieldLowParent.transform); 
+                    PlacePattern(rule.position, pattern, isOccupied, fieldHighParent.transform, fieldLowParent.transform);
                 }
                 else
                 {
@@ -148,7 +154,7 @@ public class CreateField : MonoBehaviour
             for (int x = 0; x < fieldData.width; x++)
             {
                 // 四方の辺しか判定しない
-                if (x == 0 || x == fieldData.width -1 || z == 0 || z == fieldData.depth - 1)
+                if (x == 0 || x == fieldData.width - 1 || z == 0 || z == fieldData.depth - 1)
                 {
                     var (pHigh, pLow) = fieldData.GetRandomEdgePrefab(); // 端に来たときにランダムに端のプレファブを取得する
                     SpawnObject(new Vector2Int(x, z), pHigh, pLow, fieldHighParent.transform, fieldLowParent.transform);
@@ -159,13 +165,13 @@ public class CreateField : MonoBehaviour
         }
 
         // 地面をランダムに配置していく(重要なものから先にルールを適用していく)
-        if(fieldData.spawnRules != null)
+        if (fieldData.spawnRules != null)
         {
             foreach (var rule in fieldData.spawnRules)
             {
                 // そのルールを取得していく
                 var pattern = fieldData.GetMapPatternByID(rule.patternId);
-                if(pattern == null) continue;
+                if (pattern == null) continue;
 
                 int size = pattern.size;
                 // 壁の内側を抽選範囲とする
@@ -191,13 +197,13 @@ public class CreateField : MonoBehaviour
                         Vector2Int candidatePos = new Vector2Int(rX, rZ); // 行こうとしている位置
 
                         // 同じもの同士の距離チェックを行う
-                        if(rule.minGenerateDistance > 0 && IsTooClose(candidatePos, placedPositions, rule.minGenerateDistance))
+                        if (rule.minGenerateDistance > 0 && IsTooClose(candidatePos, placedPositions, rule.minGenerateDistance))
                         {
                             continue; // 近いやつがいるのでやり直し
                         }
 
                         // 特定のオブジェクトとの距離チェックを行う
-                        if(rule.minIsolationDistance > 0 && IsTooClose(candidatePos, playerStartPosCache, rule.minIsolationDistance))
+                        if (rule.minIsolationDistance > 0 && IsTooClose(candidatePos, playerStartPosCache, rule.minIsolationDistance))
                         {
                             continue; // オブジェクトと近すぎるのでやり直し
                         }
@@ -207,9 +213,9 @@ public class CreateField : MonoBehaviour
                         {
                             // 置けるならLODに使えるように一つ一つに分解して配置する
                             PlacePattern(new Vector2Int(rX, rZ), pattern, isOccupied, fieldHighParent.transform, fieldLowParent.transform);
-                           
+
                             placedPositions.Add(candidatePos); // 配置したらリストにも登録する
-                            
+
                             break; // 成功したら次の個体に行く
                         }
                     }
@@ -218,7 +224,7 @@ public class CreateField : MonoBehaviour
         }
 
         // 隙間を埋める
-        for(int z = 0; z < fieldData.depth; z++)
+        for (int z = 0; z < fieldData.depth; z++)
         {
             for (int x = 0; x < fieldData.width; x++)
             {
@@ -229,17 +235,17 @@ public class CreateField : MonoBehaviour
                     SpawnObject(new Vector2Int(x, z), pHigh, pLow, fieldHighParent.transform, fieldLowParent.transform);
 
                     costMap[x, z] = fillerCost;
-                
+
                 }
             }
         }
     }
 
- 
+
 
 
     //  ================================================ ヘルパー関数 ==============================
-    
+
     /// <summary>
     /// 選択した範囲がすべて空いているかをチェックする
     /// </summary>
@@ -249,7 +255,7 @@ public class CreateField : MonoBehaviour
     /// <returns>すべて空いていたらtrueそうでなければfalse</returns>
     bool CanPlace(Vector2Int start, int size, bool[,] occupiedMap)
     {
-        for(int z = 0; z < size; z++)
+        for (int z = 0; z < size; z++)
         {
             for (int x = 0; x < size; x++)
             {
@@ -272,7 +278,7 @@ public class CreateField : MonoBehaviour
     /// <param name="pLow">ローモデルの親オブジェクトになるもの</param>
     void PlacePattern(Vector2Int start, SO_FieldData.MapPattern pattern, bool[,] occupiedMap, Transform pHigh, Transform pLow)
     {
-        int size  = pattern.size;
+        int size = pattern.size;
         for (int z = 0; z < size; z++)
         {
             for (int x = 0; x < size; x++)
@@ -294,7 +300,7 @@ public class CreateField : MonoBehaviour
         }
     }
 
-   
+
 
     /// <summary>
     /// オブジェクトの生成を行う(キャッシュを使っているので若干高速)
@@ -340,6 +346,12 @@ public class CreateField : MonoBehaviour
     /// </summary>
     void DrawAlgorithm()
     {
+        // 複製materialの初期化(一度も作られていなければ)
+        if (propertyBlock == null)
+        {
+            propertyBlock = new MaterialPropertyBlock();
+        }
+
         // それぞれの距離を成分ごとに計算
         float heightY = Mathf.Max(1.0f, playerTransform.position.y); // プレイヤーの高さを出す。最低でも1以上の値になるようにする
         float heightFactor = Mathf.Log(heightY); // 対数を使いy軸の値が増えるほどゆるやかに増加するもの変換
@@ -375,24 +387,24 @@ public class CreateField : MonoBehaviour
                 // Transfromではなくキャッシュ座標を使う
                 Vector3 targetPos = positionCache[x, z];
 
-                float distance_x = playerTransform.position.x - targetPos.x;
-                float distance_y = playerTransform.position.y - targetPos.y;
-                float distance_z = playerTransform.position.z - targetPos.z;
-                float distance = distance_x * distance_x + distance_y * distance_y + distance_z * distance_z; // 距離計算
+                // 距離を出す
+                float dist = Vector3.Distance(playerTransform.position, targetPos);
 
-                // 一定の距離以内にいるならtrue
-                bool should01Active = distance < sqDisp01;
-                if (cellHigh[x, z].activeSelf != should01Active)
-                {
-                    cellHigh[x, z].SetActive(should01Active);
-                }
+                // ハイポリのフェード処理
+                float hightFade = Mathf.Clamp01((disp01Distance - dist) / fadeDistance + 1.0f);
+                UpdateObjectFade(cellHigh[x, z], hightFade); // 実際のフェード
 
-                // ハイポリの範囲外かつ低ポリ範囲内ならtrue
-                bool should02Active = distance > sqDisp01 && distance < sqDisp02;
-                if (cellLow[x, z].activeSelf != should02Active)
+                // ローポリの処理
+                float lowFade = 0;
+                if(dist < disp01Distance)
                 {
-                    cellLow[x, z].SetActive(should02Active);
+                    lowFade = 1.0f - hightFade; // hightが消える分だけLowが出る
                 }
+                else
+                {
+                    lowFade = Mathf.Clamp01((totalDisp02Distance - dist) / fadeDistance + 1.0f);
+                }
+                UpdateObjectFade(cellLow[x,z],lowFade);
             }
         }
 
@@ -454,7 +466,7 @@ public class CreateField : MonoBehaviour
     /// <returns></returns>
     bool IsTooClose(Vector2Int candidate, Vector2 isolationPos, float minDistance)
     {
-        if(Vector2.Distance(candidate, isolationPos) < minDistance)
+        if (Vector2.Distance(candidate, isolationPos) < minDistance)
         {
             return true;
         }
@@ -471,10 +483,10 @@ public class CreateField : MonoBehaviour
     /// <returns>近いやつがいたらtrue全員と離れているのならfalse</returns>
     bool IsTooClose(Vector2Int candidate, List<Vector2Int> placedList, float minDistance)
     {
-        foreach(var pos in placedList)
+        foreach (var pos in placedList)
         {
             // Vector2Distanceで距離を測る
-            if(Vector2.Distance(candidate, pos) < minDistance)
+            if (Vector2.Distance(candidate, pos) < minDistance)
             {
                 return true; // 近いやつがいたのでtrueを返す
             }
@@ -496,7 +508,7 @@ public class CreateField : MonoBehaviour
 
     public Cell GetCost(Vector2Int position)
     {
-        if(position.x >= 1 && position.x < fieldData.width - 1 && position.y >= 1 && position.y < fieldData.depth - 1)
+        if (position.x >= 1 && position.x < fieldData.width - 1 && position.y >= 1 && position.y < fieldData.depth - 1)
         {
             return new Cell(position, costMap[position.x, position.y]);
         }
@@ -513,5 +525,37 @@ public class CreateField : MonoBehaviour
             return new Vector3(x, 0.0f, y);
         }
         return Vector3.zero; // 範囲外などの場合はnull を返す
+    }
+
+
+    // オブジェクトをフェードさせる関数
+    void UpdateObjectFade(GameObject obj, float fadeValue)
+    {
+        // 完全に透明ならOFF
+        if (fadeValue <= 0)
+        {
+            if (obj.activeSelf) obj.SetActive(false);
+            return;
+        }
+
+
+        if (!obj.activeSelf) obj.SetActive(true);
+
+        // Rendereを取得
+        var renderers = obj.GetComponentsInChildren<Renderer>();
+        foreach (var render in renderers)
+        {
+           
+            render.GetPropertyBlock(propertyBlock);
+
+          
+            Color baseColor = render.sharedMaterial.GetColor(propertyID);
+
+           
+            baseColor.a = fadeValue;
+
+            propertyBlock.SetColor(propertyID, baseColor);
+            render.SetPropertyBlock(propertyBlock);
+        }
     }
 }
