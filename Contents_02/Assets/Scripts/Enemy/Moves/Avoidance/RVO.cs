@@ -25,8 +25,8 @@ public class RVO
             //VO‚ÌŽ²‚Æ‘Š‘Î‘¬“x‚ÌŠp“x
             float angle = Vector3.Angle(axis, vRel);
 
-            Debug.Log(angle);
-            Debug.Log("theta" + theta);
+            // Debug.Log(angle);
+            // Debug.Log("theta" + theta);
             //Šp“x“à‚Å“–‚½‚è‚»‚¤‚È‚ç
             if(theta >= angle)
             {

@@ -20,11 +20,12 @@ public class MapManager : MonoBehaviour
     public void Start()
     {
         field = GetComponent<CreateField>();
-        //SetUp();
+        SetUp();
     }
 
     public void SetUp()
     {
+        // 配置
         for (int i = 0; i < field.GetWidthCount(); i++)
         {
             for (int j = 0; j < field.GetDepthCount(); j++)
@@ -44,11 +45,29 @@ public class MapManager : MonoBehaviour
                         exitNodes[worldNode] = cell;
                     }
                 }
-                // 接続ができそうなノードがあったら接続
-                foreach(Node node in exitNodes.Keys)
+            }
+        }
+
+        // 接続ができそうなノードがあったら接続
+        foreach (Node node in exitNodes.Keys)
+        {
+            Vector2Int checkCellPos = NodeExitDirUtil.GetNeighborCell(exitNodes[node].cellPos, node.exitDir);
+            Cell checkCell = field.GetCost(checkCellPos);
+            foreach (Node checkNode in checkCell.so_nodes.nodes)
+            {
+                if(node.exitDir == NodeExitDirUtil.GetOppositeDir(checkNode.exitDir))
                 {
-                    Vector2Int checkCell = NodeExitDirUtil.GetNeighborCell(exitNodes[node].cellPos, node.exitDir);
-                    //if()
+                    // 接続
+                    // 移動できるノードリストにないなら追加
+                    if (node.nextNodeIds.Contains(checkNode.id) == false)
+                    {
+                        node.nextNodeIds.Add(checkNode.id);
+                    }
+
+                    if (checkNode.nextNodeIds.Contains(node.id) == false)
+                    {
+                        checkNode.nextNodeIds.Add(node.id);
+                    }
                 }
             }
         }
