@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEditor.Analytics;
+using UnityEditor.Purchasing;
 using UnityEngine;
 using UnityEngine.Scripting;
 
@@ -50,6 +51,7 @@ public class CreateField : MonoBehaviour
     static MaterialPropertyBlock propertyBlock;
     readonly int propertyID = Shader.PropertyToID("_BaseColor"); // Shaderからこのプロパティ設定を読み取る
 
+    Dictionary<Vector2Int, SO_Nodes> nodesMap = new Dictionary<Vector2Int, SO_Nodes>();
 
 
     void Awake()
@@ -156,8 +158,8 @@ public class CreateField : MonoBehaviour
                 // 四方の辺しか判定しない
                 if (x == 0 || x == fieldData.width - 1 || z == 0 || z == fieldData.depth - 1)
                 {
-                    var (pHigh, pLow) = fieldData.GetRandomEdgePrefab(); // 端に来たときにランダムに端のプレファブを取得する
-                    SpawnObject(new Vector2Int(x, z), pHigh, pLow, fieldHighParent.transform, fieldLowParent.transform);
+                    var (pHigh, pLow, nodes) = fieldData.GetRandomEdgePrefab(); // 端に来たときにランダムに端のプレファブを取得する
+                    SpawnObject(new Vector2Int(x, z), pHigh, pLow, fieldHighParent.transform, fieldLowParent.transform, nodes);
                     isOccupied[x, z] = true;
                     costMap[x, z] = edgeCost; // 壁コスト設定
                 }
@@ -231,8 +233,8 @@ public class CreateField : MonoBehaviour
                 // 何も置かれていないなら地面を置く
                 if (!isOccupied[x, z])
                 {
-                    var (pHigh, pLow) = fieldData.GetRandomFillerPrafab();
-                    SpawnObject(new Vector2Int(x, z), pHigh, pLow, fieldHighParent.transform, fieldLowParent.transform);
+                    var (pHigh, pLow, nodes) = fieldData.GetRandomFillerPrafab();
+                    SpawnObject(new Vector2Int(x, z), pHigh, pLow, fieldHighParent.transform, fieldLowParent.transform, nodes);
 
                     costMap[x, z] = fillerCost;
 
@@ -292,7 +294,7 @@ public class CreateField : MonoBehaviour
                 if (pIndex < pattern.partsHigh.Length)
                 {
                     // 生成を行いつつbool座標の場所をtrueにする
-                    SpawnObject(new Vector2Int(currentX, currentZ), pattern.partsHigh[pIndex], pattern.partsLow[pIndex], pHigh, pLow);
+                    SpawnObject(new Vector2Int(currentX, currentZ), pattern.partsHigh[pIndex], pattern.partsLow[pIndex], pHigh, pLow, pattern.nodes);
                     occupiedMap[currentX, currentZ] = true;
                     costMap[currentX, currentZ] = pattern.cost; // コストの設定
                 }
@@ -310,7 +312,7 @@ public class CreateField : MonoBehaviour
     /// <param name="prefabLow">ローモデルのプレファブ</param>
     /// <param name="pHigh">ハイモデルを格納する親オブジェクト</param>
     /// <param name="pLow">ローモデルを格納する親オブジェクト</param>
-    void SpawnObject(Vector2Int generatePos, GameObject prefabHigh, GameObject prefabLow, Transform pHigh, Transform pLow)
+    void SpawnObject(Vector2Int generatePos, GameObject prefabHigh, GameObject prefabLow, Transform pHigh, Transform pLow, SO_Nodes nodes)
     {
         // プレファブがない場合は何もしない
         if (prefabHigh == null || prefabLow == null) return;
@@ -336,6 +338,8 @@ public class CreateField : MonoBehaviour
         {
             col.enabled = false;
         }
+
+        nodesMap[generatePos] = nodes;
     }
 
 
@@ -557,5 +561,16 @@ public class CreateField : MonoBehaviour
             propertyBlock.SetColor(propertyID, baseColor);
             render.SetPropertyBlock(propertyBlock);
         }
+    }
+
+    public List<Node> GetNodes(Vector2Int position)
+    {
+       if(nodesMap.TryGetValue(position, out SO_Nodes nodesAsset))
+        {
+            // nodesがあればそれを返す
+            return nodesAsset != null ? nodesAsset.nodes : null;
+        }
+
+       return null;
     }
 }

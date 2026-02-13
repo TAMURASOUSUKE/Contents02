@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "SO_FieldData", menuName = "Scriptable Objects/SO_FieldData")]
@@ -12,11 +13,7 @@ public class SO_FieldData : ScriptableObject
 
     [Header("フィールドの端になるオブジェクト群")]
     public GameObject[] edgePrefabHigh; // ハイモデル
-    public GameObject[] edgePrefabLow; // ローモデル
-
-    [Header("1×1の埋め尽くし用")]
-    public GameObject[] fillerPrefabHigh;
-    public GameObject[] fillerPrefabLow;
+    public GameObject[] edgePrefabLow; // ローモデ
 
     [Header("パターンの定義")]
     public List<MapPattern> patterns;
@@ -45,6 +42,8 @@ public class SO_FieldData : ScriptableObject
         public GameObject[] partsLow; // それぞれのローモデル
         [Header("A*計算用のコスト(複雑な地形ならコストを重くして下さい)")]
         public int cost;
+        [Header("Nodesの設定")]
+        public SO_Nodes nodes;
     }
 
     /// <summary>
@@ -94,21 +93,23 @@ public class SO_FieldData : ScriptableObject
     /// ランダムに取り出した外枠を取得する
     /// </summary>
     /// <returns>ハイモデルのオブジェクトとローモデルのオブジェクトを同時に返す</returns>
-    public (GameObject high, GameObject low) GetRandomEdgePrefab()
+    public (GameObject high, GameObject low, SO_Nodes nodes) GetRandomEdgePrefab()
     {
-        if (edgePrefabHigh == null || edgePrefabLow == null) return (null, null); // 外枠用のプレファブが入っていない時はnullを返す
+        if (edgePrefabHigh == null || edgePrefabLow == null) return (null, null, null); // 外枠用のプレファブが入っていない時はnullを返す
         int index = Random.Range(0, edgePrefabHigh.Length); // 配列からランダムに取り出す
-        return (edgePrefabHigh[index], edgePrefabLow[index]);
+        return (edgePrefabHigh[index], edgePrefabLow[index], null);
     }
 
     /// <summary>
     /// ランダムに取り出した地面を取得する
     /// </summary>
     /// <returns>ハイモデルのオブジェクトとローモデルのオブジェクトを同時に返す</returns>
-    public (GameObject high, GameObject low) GetRandomFillerPrafab()
+    public (GameObject high, GameObject low, SO_Nodes) GetRandomFillerPrafab()
     {
-        if (fillerPrefabHigh == null || fillerPrefabLow == null) return (null, null); // 地面用のプレファブが入っていないならnullを返す
-        int index = Random.Range(0, fillerPrefabHigh.Length); // 配列からランダムに取り出す
-        return (fillerPrefabHigh[index], fillerPrefabLow[index]);
+        List<MapPattern> size1Pattern = patterns.FindAll(p => p.size == 1); // サイズが1だけを探す
+        if(size1Pattern.Count == 0) return (null, null, null); // サイズが1のものがなければnullを返す 
+        int index = Random.Range(0, size1Pattern.Count);
+        MapPattern selected = size1Pattern[index];
+        return (selected.partsHigh[0], selected.partsLow[0], selected.nodes); // 1by1なので最初のオブジェクトを返す
     }
 }
