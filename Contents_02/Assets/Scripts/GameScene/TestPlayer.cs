@@ -1,6 +1,5 @@
 using UnityEngine;
 
-// ‚±‚ê‚ð‚Â‚¯‚é‚ÆŽ©“®‚ÅCharacterController‚à’Ç‰Á‚³‚ê‚Ü‚·
 [RequireComponent(typeof(CharacterController))]
 public class TestPlayer: MonoBehaviour
 {

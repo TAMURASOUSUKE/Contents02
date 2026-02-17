@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.Assertions.Must;
 using UnityEngine.InputSystem;
 
+[RequireComponent(typeof(CharacterController))]
 public class PlayerMovementTest : MonoBehaviour, ISkillReceiver
 {
     private InputSystem_Actions inputActions;
@@ -36,6 +37,8 @@ public class PlayerMovementTest : MonoBehaviour, ISkillReceiver
 
     private void Update()
     {
+        if (!controller.enabled) return;
+
         // 1. 移動計算（横方向）
         Vector3 moveVector = CalculateMovement();
 
@@ -101,12 +104,10 @@ public class PlayerMovementTest : MonoBehaviour, ISkillReceiver
 
         if (statusController.Has(SkillMasks.SpeedUp))
         {
-            Debug.Log("スピードアップ中");
             playerCamera.SpeedUPFOV();
         }
         else
         {
-            Debug.Log("通常速度");
             playerCamera.ResetFOV();
         }
     }
