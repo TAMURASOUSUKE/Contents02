@@ -57,58 +57,16 @@ MonoBehaviour:
     - {fileID: 5176774174892677934, guid: d089ff9c87ae09f468885279dafbb53c, type: 3}
     - {fileID: 5176774174892677934, guid: d089ff9c87ae09f468885279dafbb53c, type: 3}
     cost: 15
-    nodes: {fileID: 0}
-  - id: TestFixed
-    size: 3
+    nodes: {fileID: 11400000, guid: 0271e67ae00603b43a5ef37011bc4573, type: 2}
+  - id: 1by1
+    size: 1
     partsHigh:
-    - {fileID: 8410858848237938347, guid: ec7b4e6156cace646ad2d257203f588e, type: 3}
-    - {fileID: 8410858848237938347, guid: ec7b4e6156cace646ad2d257203f588e, type: 3}
-    - {fileID: 8410858848237938347, guid: ec7b4e6156cace646ad2d257203f588e, type: 3}
-    - {fileID: 8410858848237938347, guid: ec7b4e6156cace646ad2d257203f588e, type: 3}
-    - {fileID: 8410858848237938347, guid: ec7b4e6156cace646ad2d257203f588e, type: 3}
-    - {fileID: 8410858848237938347, guid: ec7b4e6156cace646ad2d257203f588e, type: 3}
-    - {fileID: 8410858848237938347, guid: ec7b4e6156cace646ad2d257203f588e, type: 3}
-    - {fileID: 8410858848237938347, guid: ec7b4e6156cace646ad2d257203f588e, type: 3}
-    - {fileID: 8410858848237938347, guid: ec7b4e6156cace646ad2d257203f588e, type: 3}
+    - {fileID: 3619713947411506292, guid: 785b94c01e9a7f046a148a9a0df425d9, type: 3}
     partsLow:
-    - {fileID: 8410858848237938347, guid: 63aeb339480d8424fa9672cecb69cbed, type: 3}
-    - {fileID: 8410858848237938347, guid: 63aeb339480d8424fa9672cecb69cbed, type: 3}
-    - {fileID: 8410858848237938347, guid: 63aeb339480d8424fa9672cecb69cbed, type: 3}
-    - {fileID: 8410858848237938347, guid: 63aeb339480d8424fa9672cecb69cbed, type: 3}
-    - {fileID: 8410858848237938347, guid: 63aeb339480d8424fa9672cecb69cbed, type: 3}
-    - {fileID: 8410858848237938347, guid: 63aeb339480d8424fa9672cecb69cbed, type: 3}
-    - {fileID: 8410858848237938347, guid: 63aeb339480d8424fa9672cecb69cbed, type: 3}
-    - {fileID: 8410858848237938347, guid: 63aeb339480d8424fa9672cecb69cbed, type: 3}
-    - {fileID: 8410858848237938347, guid: 63aeb339480d8424fa9672cecb69cbed, type: 3}
-    cost: 4
-    nodes: {fileID: 0}
-  - id: TestFixed
-    size: 3
-    partsHigh:
-    - {fileID: 8410858848237938347, guid: ec7b4e6156cace646ad2d257203f588e, type: 3}
-    - {fileID: 8410858848237938347, guid: ec7b4e6156cace646ad2d257203f588e, type: 3}
-    - {fileID: 8410858848237938347, guid: ec7b4e6156cace646ad2d257203f588e, type: 3}
-    - {fileID: 8410858848237938347, guid: ec7b4e6156cace646ad2d257203f588e, type: 3}
-    - {fileID: 8410858848237938347, guid: ec7b4e6156cace646ad2d257203f588e, type: 3}
-    - {fileID: 8410858848237938347, guid: ec7b4e6156cace646ad2d257203f588e, type: 3}
-    - {fileID: 8410858848237938347, guid: ec7b4e6156cace646ad2d257203f588e, type: 3}
-    - {fileID: 8410858848237938347, guid: ec7b4e6156cace646ad2d257203f588e, type: 3}
-    - {fileID: 8410858848237938347, guid: ec7b4e6156cace646ad2d257203f588e, type: 3}
-    partsLow:
-    - {fileID: 8410858848237938347, guid: 63aeb339480d8424fa9672cecb69cbed, type: 3}
-    - {fileID: 8410858848237938347, guid: 63aeb339480d8424fa9672cecb69cbed, type: 3}
-    - {fileID: 8410858848237938347, guid: 63aeb339480d8424fa9672cecb69cbed, type: 3}
-    - {fileID: 8410858848237938347, guid: 63aeb339480d8424fa9672cecb69cbed, type: 3}
-    - {fileID: 8410858848237938347, guid: 63aeb339480d8424fa9672cecb69cbed, type: 3}
-    - {fileID: 8410858848237938347, guid: 63aeb339480d8424fa9672cecb69cbed, type: 3}
-    - {fileID: 8410858848237938347, guid: 63aeb339480d8424fa9672cecb69cbed, type: 3}
-    - {fileID: 8410858848237938347, guid: 63aeb339480d8424fa9672cecb69cbed, type: 3}
-    - {fileID: 8410858848237938347, guid: 63aeb339480d8424fa9672cecb69cbed, type: 3}
-    cost: 4
-    nodes: {fileID: 0}
-  fixedRules:
-  - position: {x: 15, y: 15}
-    patternID: TestFixed
+    - {fileID: 3619713947411506292, guid: 154f9df2e46fedf469d13098d85f70dc, type: 3}
+    cost: 1
+    nodes: {fileID: 11400000, guid: 704f5ea1158c24f40b5e8d84d55837d5, type: 2}
+  fixedRules: []
   spawnRules:
   - patternId: "\u30C6\u30B9\u30C83By3"
     count: 4

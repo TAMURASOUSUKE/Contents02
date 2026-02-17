@@ -104,7 +104,7 @@ public class SO_FieldData : ScriptableObject
     /// ランダムに取り出した地面を取得する
     /// </summary>
     /// <returns>ハイモデルのオブジェクトとローモデルのオブジェクトを同時に返す</returns>
-    public (GameObject high, GameObject low, SO_Nodes) GetRandomFillerPrafab()
+    public (GameObject high, GameObject low, SO_Nodes nodes) GetRandomFillerPrafab()
     {
         List<MapPattern> size1Pattern = patterns.FindAll(p => p.size == 1); // サイズが1だけを探す
         if(size1Pattern.Count == 0) return (null, null, null); // サイズが1のものがなければnullを返す 

@@ -5,7 +5,15 @@ using UnityEditor.Purchasing;
 using UnityEngine;
 using UnityEngine.Scripting;
 
-
+class GridCell
+{
+    public GameObject objHigh;
+    public GameObject objLow;
+    public Renderer[] renderersHight;
+    public Renderer[] renderersLow;
+    public bool isHightActive = false;
+    public bool isLowActive = false;
+}
 
 public class CreateField : MonoBehaviour
 {
@@ -29,8 +37,7 @@ public class CreateField : MonoBehaviour
     [SerializeField] int generationInterval = 50;
 
     // オブジェクト管理配列
-    GameObject[,] cellHigh; // fieldDataから取り出したハイポリを格納する変数
-    GameObject[,] cellLow; // fieldDataから取り出したローポリを格納する変数
+    GridCell[,] gridCells;
 
     // Transformへのアクセスを減らし高速化をする目的でキャッシュ配列を用意する
     Vector3[,] positionCache;
@@ -80,7 +87,6 @@ public class CreateField : MonoBehaviour
 
     void Update()
     {
-        if (cellHigh == null) return;
 
         DrawAlgorithm();
 
@@ -104,8 +110,7 @@ public class CreateField : MonoBehaviour
         fieldLowParent.transform.parent = transform;
 
         // 配列を初期化する
-        cellHigh = new GameObject[fieldData.width, fieldData.depth];
-        cellLow = new GameObject[fieldData.width, fieldData.depth];
+        gridCells = new GridCell[fieldData.width, fieldData.depth];
         positionCache = new Vector3[fieldData.width, fieldData.depth]; // Transfromへのアクセスを防ぐ
         // 埋めつくすときに判定するbool型のデータをフィールド分用意する
         bool[,] isOccupied = new bool[fieldData.width, fieldData.depth];
@@ -323,22 +328,24 @@ public class CreateField : MonoBehaviour
         // 負担を減らすためにキャッシュに保存
         positionCache[generatePos.x, generatePos.y] = pos;
 
+        GridCell cell = new GridCell();
+
         // Highモデルを生成する
-        cellHigh[generatePos.x, generatePos.y] = Instantiate(prefabHigh, pos, Quaternion.identity, pHigh);
+        cell.objHigh = Instantiate(prefabHigh, pos, Quaternion.identity, pHigh);
+        cell.objHigh.SetActive(false);
+        cell.renderersHight = cell.objHigh.GetComponentsInChildren<Renderer>();
         // cellHigh[generatePos.x, generatePos.y].transform.localScale = scaleCache; // スケールの統一
-        cellHigh[generatePos.x, generatePos.y].SetActive(false); // 最初は映さない
 
         // Lowモデルを生成する
-        cellLow[generatePos.x, generatePos.y] = Instantiate(prefabLow, pos, Quaternion.identity, pLow);
+        cell.objLow = Instantiate(prefabLow, pos, Quaternion.identity, pLow);
         // cellLow[generatePos.x, generatePos.y].transform.localScale = scaleCache; // スケールの統一
-        cellLow[generatePos.x, generatePos.y].SetActive(false); // 最初は映さない
+        cell.objLow.SetActive(false); // 最初は映さない
+        var colliders = cell.objLow.GetComponentsInChildren(typeof(Collider));
+        foreach(var c in colliders) Destroy(c);
 
-        // Low側があたり判定を持っていれば無効化
-        if (cellLow[generatePos.x, generatePos.y].TryGetComponent(out Collider col))
-        {
-            col.enabled = false;
-        }
+        cell.renderersLow = cell.objLow.GetComponentsInChildren<Renderer>();
 
+        gridCells[generatePos.x, generatePos.y] = cell;
         nodesMap[generatePos] = nodes;
     }
 
@@ -350,6 +357,8 @@ public class CreateField : MonoBehaviour
     /// </summary>
     void DrawAlgorithm()
     {
+        if (gridCells == null || playerTransform == null || fieldData == null) return;
+
         // 複製materialの初期化(一度も作られていなければ)
         if (propertyBlock == null)
         {
@@ -386,7 +395,9 @@ public class CreateField : MonoBehaviour
             for (int x = minX; x <= maxX; x++)
             {
 
-                if (cellHigh[x, z] == null) continue; // 生成されていない場所はスキップ
+                if (gridCells[x, z] == null) continue; // 生成されていない場所はスキップ
+
+                GridCell cell = gridCells[x, z];
 
                 // Transfromではなくキャッシュ座標を使う
                 Vector3 targetPos = positionCache[x, z];
@@ -396,7 +407,7 @@ public class CreateField : MonoBehaviour
 
                 // ハイポリのフェード処理
                 float hightFade = Mathf.Clamp01((disp01Distance - dist) / fadeDistance + 1.0f);
-                UpdateObjectFade(cellHigh[x, z], hightFade); // 実際のフェード
+                UpdateObjectFade(cell.objHigh, hightFade, cell.renderersHight, ref cell.isHightActive); // 実際のフェード
 
                 // ローポリの処理
                 float lowFade = 0;
@@ -408,7 +419,7 @@ public class CreateField : MonoBehaviour
                 {
                     lowFade = Mathf.Clamp01((totalDisp02Distance - dist) / fadeDistance + 1.0f);
                 }
-                UpdateObjectFade(cellLow[x,z],lowFade);
+                UpdateObjectFade(cell.objLow,lowFade, cell.renderersLow, ref cell.isLowActive);
             }
         }
 
@@ -421,45 +432,45 @@ public class CreateField : MonoBehaviour
     /// <summary>
     /// 万が一取りこぼしがあった時のために一定時間で全体を検索しオブジェクトの状態を切り替える関数
     /// </summary>
-    void FullRefresh()
-    {
-        // それぞれの距離を成分ごとに計算
-        float heightY = Mathf.Max(1.0f, playerTransform.position.y); // プレイヤーの高さを出す。最低でも1以上の値になるようにする
-        float heightFactor = Mathf.Log(heightY); // 対数を使いy軸の値が増えるほどゆるやかに増加するもの変換
-        float totalDisp02Distance = disp02Distance * (1.0f + heightFactor * heightFactorADJ); // 調整値をかけて広がり具合を決めるheightFactorが0でも安全なように+1
-        float sqDisp01 = disp01Distance * disp01Distance;
-        float sqDisp02 = totalDisp02Distance * totalDisp02Distance;
+    //void FullRefresh()
+    //{
+    //    // それぞれの距離を成分ごとに計算
+    //    float heightY = Mathf.Max(1.0f, playerTransform.position.y); // プレイヤーの高さを出す。最低でも1以上の値になるようにする
+    //    float heightFactor = Mathf.Log(heightY); // 対数を使いy軸の値が増えるほどゆるやかに増加するもの変換
+    //    float totalDisp02Distance = disp02Distance * (1.0f + heightFactor * heightFactorADJ); // 調整値をかけて広がり具合を決めるheightFactorが0でも安全なように+1
+    //    float sqDisp01 = disp01Distance * disp01Distance;
+    //    float sqDisp02 = totalDisp02Distance * totalDisp02Distance;
 
-        for (int z = 0; z < fieldData.depth; z++)
-        {
-            for (int x = 0; x < fieldData.width; x++)
-            {
+    //    for (int z = 0; z < fieldData.depth; z++)
+    //    {
+    //        for (int x = 0; x < fieldData.width; x++)
+    //        {
 
-                if (cellHigh[x, z] == null) continue;
+    //            if (cellHigh[x, z] == null) continue;
 
-                Vector3 targetPos = positionCache[x, z];
+    //            Vector3 targetPos = positionCache[x, z];
 
-                float distance_x = playerTransform.position.x - targetPos.x;
-                float distance_y = playerTransform.position.y - targetPos.y;
-                float distance_z = playerTransform.position.z - targetPos.z;
-                float distance = distance_x * distance_x + distance_y * distance_y + distance_z * distance_z; // 距離計算
+    //            float distance_x = playerTransform.position.x - targetPos.x;
+    //            float distance_y = playerTransform.position.y - targetPos.y;
+    //            float distance_z = playerTransform.position.z - targetPos.z;
+    //            float distance = distance_x * distance_x + distance_y * distance_y + distance_z * distance_z; // 距離計算
 
-                // 一定の距離以内にいるならtrue
-                bool should01Active = distance < sqDisp01;
-                if (cellHigh[x, z].activeSelf != should01Active)
-                {
-                    cellHigh[x, z].SetActive(should01Active);
-                }
+    //            // 一定の距離以内にいるならtrue
+    //            bool should01Active = distance < sqDisp01;
+    //            if (cellHigh[x, z].activeSelf != should01Active)
+    //            {
+    //                cellHigh[x, z].SetActive(should01Active);
+    //            }
 
-                // ハイポリの範囲外かつ低ポリ範囲内ならtrue
-                bool should02Active = distance > sqDisp01 && distance < sqDisp02;
-                if (cellLow[x, z].activeSelf != should02Active)
-                {
-                    cellLow[x, z].SetActive(should02Active);
-                }
-            }
-        }
-    }
+    //            // ハイポリの範囲外かつ低ポリ範囲内ならtrue
+    //            bool should02Active = distance > sqDisp01 && distance < sqDisp02;
+    //            if (cellLow[x, z].activeSelf != should02Active)
+    //            {
+    //                cellLow[x, z].SetActive(should02Active);
+    //            }
+    //        }
+    //    }
+    //}
 
     /// <summary>
     /// 特定のオブジェクトと一定距離離れているかどうかをチェックする
@@ -533,31 +544,29 @@ public class CreateField : MonoBehaviour
 
 
     // オブジェクトをフェードさせる関数
-    void UpdateObjectFade(GameObject obj, float fadeValue)
+    void UpdateObjectFade(GameObject obj, float fadeValue, Renderer[] renderers, ref bool isActive)
     {
-        // 完全に透明ならOFF
         if (fadeValue <= 0)
         {
-            if (obj.activeSelf) obj.SetActive(false);
+            if (isActive)
+            {
+                obj.SetActive(false);
+                isActive = false;
+            }
             return;
         }
 
+        if (!isActive)
+        {
+            obj.SetActive(true);
+            isActive = true;
+        }
 
-        if (!obj.activeSelf) obj.SetActive(true);
-
-        // Rendereを取得
-        var renderers = obj.GetComponentsInChildren<Renderer>();
         foreach (var render in renderers)
         {
-           
             render.GetPropertyBlock(propertyBlock);
-
-          
             Color baseColor = render.sharedMaterial.GetColor(propertyID);
-
-           
             baseColor.a = fadeValue;
-
             propertyBlock.SetColor(propertyID, baseColor);
             render.SetPropertyBlock(propertyBlock);
         }
